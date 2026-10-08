@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAgent — Data Ingestion & Parse Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .step-active {
+            border-color: #38bdf8;
+            color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+        }
+        .step-complete {
+            border-color: #10b981;
+            color: #10b981;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Top Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="h-9 w-9 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold text-lg tracking-tight text-white">FinAgent</span>
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded bg-cyan-950 text-cyan-400 border border-cyan-800">Part 1</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Automated Multi-Bank Statement Ingestion & Parse Engine</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="hidden sm:flex items-center space-x-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
+                    <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>FastAPI Deterministic Engine Active</span>
+                </div>
+                <a href="/docs" target="_blank" class="text-xs font-medium text-slate-300 hover:text-white flex items-center space-x-1 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+                    <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+                    <span>Swagger API</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Pipeline Progress Steps Bar -->
+        <div class="glass-panel rounded-2xl p-4 sm:p-6 shadow-xl">
+            <div class="flex items-center justify-between overflow-x-auto pb-2 sm:pb-0 gap-2">
+                <div class="flex items-center space-x-3 min-w-max">
+                    <div id="step-1" class="h-9 w-9 rounded-full border-2 step-active flex items-center justify-center font-bold text-sm bg-slate-900">1</div>
+                    <div>
+                        <div class="text-xs font-semibold text-slate-200">Upload & Detect</div>
+                        <div class="text-[11px] text-slate-400">CSV, XLSX, PDF</div>
+                    </div>
+                </div>
+                <div class="h-0.5 w-8 bg-slate-800 hidden md:block"></div>
+
+                <div class="flex items-center space-x-3 min-w-max">
+                    <div id="step-2" class="h-9 w-9 rounded-full border-2 border-slate-700 text-slate-500 flex items-center justify-center font-bold text-sm bg-slate-900">2</div>
+                    <div>
+                        <div class="text-xs font-semibold text-slate-200">Schema Mapping</div>
+                        <div class="text-[11px] text-slate-400">Fuzzy & Alias Match</div>
+                    </div>
+                </div>
+                <div class="h-0.5 w-8 bg-slate-800 hidden md:block"></div>
+
+                <div class="flex items-center space-x-3 min-w-max">
+                    <div id="step-3" class="h-9 w-9 rounded-full border-2 border-slate-700 text-slate-500 flex items-center justify-center font-bold text-sm bg-slate-900">3</div>
+                    <div>
+                        <div class="text-xs font-semibold text-slate-200">Normalization</div>
+                        <div class="text-[11px] text-slate-400">Dates & Currencies</div>
+                    </div>
+                </div>
+                <div class="h-0.5 w-8 bg-slate-800 hidden md:block"></div>
+
+                <div class="flex items-center space-x-3 min-w-max">
+                    <div id="step-4" class="h-9 w-9 rounded-full border-2 border-slate-700 text-slate-500 flex items-center justify-center font-bold text-sm bg-slate-900">4</div>
+                    <div>
+                        <div class="text-xs font-semibold text-slate-200">Validation & Output</div>
+                        <div class="text-[11px] text-slate-400">Canonical JSON Contract</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE 1: File Upload Screen -->
+        <div id="upload-section" class="glass-panel rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+            <div class="max-w-2xl mx-auto text-center space-y-4">
+                <div class="inline-flex p-3 rounded-2xl bg-cyan-950/60 border border-cyan-800/60 text-cyan-400 mb-2">
+                    <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white tracking-tight">Ingest Bank Statement</h2>
+                <p class="text-sm text-slate-400">Upload heterogeneous bank statements from any institution. The deterministic engine extracts tabular records, normalizes currencies, and produces standard canonical transactions.</p>
+                
+                <!-- Dropzone Area -->
+                <div id="dropzone" class="mt-6 border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-8 transition cursor-pointer bg-slate-900/40 hover:bg-slate-900/80 group">
+                    <input type="file" id="file-input" class="hidden" accept=".csv,.xlsx,.xls,.pdf,.tsv">
+                    <div class="flex flex-col items-center justify-center space-y-3">
+                        <i data-lucide="file-up" class="w-10 h-10 text-slate-400 group-hover:text-cyan-400 transition"></i>
+                        <p class="text-sm font-medium text-slate-200">
+                            <span class="text-cyan-400 font-semibold underline underline-offset-2">Click to browse</span> or drag and drop statement file
+                        </p>
+                        <p class="text-xs text-slate-500">Supported formats: CSV, TSV, Excel (.xlsx), Text PDF (Up to 25 MB)</p>
+                    </div>
+                </div>
+
+                <!-- One-click Demo Preset Buttons -->
+                <div class="pt-6 border-t border-slate-800">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Or test instantly with preloaded bank statements:</p>
+                    <div class="flex flex-wrap items-center justify-center gap-2.5">
+                        <button onclick="loadSampleStatement('hdfc')" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3.5 py-2 rounded-lg text-slate-200 font-medium flex items-center space-x-1.5 transition">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-blue-400"></i>
+                            <span>HDFC Statement (CSV)</span>
+                        </button>
+                        <button onclick="loadSampleStatement('icici')" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3.5 py-2 rounded-lg text-slate-200 font-medium flex items-center space-x-1.5 transition">
+                            <i data-lucide="table" class="w-3.5 h-3.5 text-orange-400"></i>
+                            <span>ICICI Statement (XLSX)</span>
+                        </button>
+                        <button onclick="loadSampleStatement('sbi')" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3.5 py-2 rounded-lg text-slate-200 font-medium flex items-center space-x-1.5 transition">
+                            <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400"></i>
+                            <span>SBI Statement (Indian Commas & Errors)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE 2: Processing & Loading Animation -->
+        <div id="processing-section" class="hidden glass-panel rounded-2xl p-12 text-center space-y-6">
+            <div class="inline-flex relative">
+                <div class="w-16 h-16 rounded-full border-4 border-cyan-500/20 border-t-cyan-500 animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i data-lucide="cpu" class="w-6 h-6 text-cyan-400"></i>
+                </div>
+            </div>
+            <div>
+                <h3 id="processing-title" class="text-lg font-bold text-white">Extracting & Analyzing File Structure</h3>
+                <p id="processing-desc" class="text-xs text-slate-400 mt-1">Sniffing table header offsets and running schema inference...</p>
+            </div>
+        </div>
+
+        <!-- STAGE 3: Intelligent Schema Mapping Review -->
+        <div id="mapping-section" class="hidden glass-panel rounded-2xl p-6 sm:p-8 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                <div>
+                    <div class="flex items-center space-x-3">
+                        <h3 class="text-xl font-bold text-white">Column & Schema Mapping</h3>
+                        <span id="mapping-confidence-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">
+                            Confidence: 98%
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">Verify or adjust detected column mappings before deterministic normalization and validation.</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="resetPipeline()" class="text-xs px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium border border-slate-700 transition">
+                        Cancel
+                    </button>
+                    <button onclick="submitMappingAndExecute()" class="text-xs px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold flex items-center space-x-1.5 shadow-lg shadow-cyan-600/30 transition">
+                        <span>Execute Normalization</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mapping Grid -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/60">
+                            <th class="py-3 px-4 font-semibold">Source Column (Bank Header)</th>
+                            <th class="py-3 px-4 font-semibold">Sample Row Values</th>
+                            <th class="py-3 px-4 font-semibold">Target Canonical Field</th>
+                            <th class="py-3 px-4 font-semibold">Detection Method & Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mapping-table-body" class="divide-y divide-slate-800/60 font-mono">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- STAGE 4: Final Validation Audit & Canonical Transaction Table -->
+        <div id="results-section" class="hidden space-y-6">
+
+            <!-- Summary KPI Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-panel rounded-xl p-4 border border-slate-800">
+                    <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+                        <span>Total Parsed Rows</span>
+                        <i data-lucide="layers" class="w-4 h-4 text-cyan-400"></i>
+                    </div>
+                    <div id="kpi-total" class="text-2xl font-bold text-white mt-2">0</div>
+                    <div class="text-[11px] text-slate-500 mt-1">Extracted from statement</div>
+                </div>
+
+                <div class="glass-panel rounded-xl p-4 border border-emerald-900/40 bg-emerald-950/10">
+                    <div class="flex items-center justify-between text-emerald-400 text-xs font-medium">
+                        <span>Valid Transactions</span>
+                        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+                    </div>
+                    <div id="kpi-valid" class="text-2xl font-bold text-emerald-300 mt-2">0</div>
+                    <div class="text-[11px] text-emerald-500/80 mt-1">Ready for Reconciliation</div>
+                </div>
+
+                <div class="glass-panel rounded-xl p-4 border border-amber-900/40 bg-amber-950/10">
+                    <div class="flex items-center justify-between text-amber-400 text-xs font-medium">
+                        <span>Audit Warnings</span>
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
+                    </div>
+                    <div id="kpi-warnings" class="text-2xl font-bold text-amber-300 mt-2">0</div>
+                    <div class="text-[11px] text-amber-500/80 mt-1">e.g. missing reference</div>
+                </div>
+
+                <div class="glass-panel rounded-xl p-4 border border-rose-900/40 bg-rose-950/10">
+                    <div class="flex items-center justify-between text-rose-400 text-xs font-medium">
+                        <span>Blocked Errors</span>
+                        <i data-lucide="x-circle" class="w-4 h-4 text-rose-400"></i>
+                    </div>
+                    <div id="kpi-errors" class="text-2xl font-bold text-rose-300 mt-2">0</div>
+                    <div class="text-[11px] text-rose-500/80 mt-1">Logged into error ledger</div>
+                </div>
+            </div>
+
+            <!-- Ready for Part 2 Reconciliation Banner -->
+            <div class="glass-panel rounded-xl p-4 border border-cyan-800 bg-gradient-to-r from-cyan-950/40 via-blue-950/20 to-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="h-10 w-10 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+                        <i data-lucide="database" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-white">Canonical Dataset Verified & Ready</h4>
+                        <p class="text-xs text-slate-400">Canonical Transaction JSON format matches Part 2 Reconciliation Engine contract.</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="toggleErrorDrawer()" id="btn-toggle-errors" class="text-xs px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium border border-slate-700 flex items-center space-x-1.5 transition">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <span>Inspect Error Log (<span id="error-badge-count">0</span>)</span>
+                    </button>
+                    <button onclick="downloadCanonicalJSON()" class="text-xs px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold flex items-center space-x-1.5 shadow-lg shadow-cyan-600/30 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Download Canonical JSON</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Ledger Drawer (Collapsible) -->
+            <div id="error-drawer" class="hidden glass-panel rounded-xl p-5 border border-rose-900/60 bg-rose-950/20 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h5 class="text-xs font-bold text-rose-300 uppercase tracking-wider flex items-center space-x-2">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i>
+                        <span>Audit Error Ledger & Warnings</span>
+                    </h5>
+                    <button onclick="toggleErrorDrawer()" class="text-xs text-slate-400 hover:text-white">&times; Close</button>
+                </div>
+                <div class="overflow-x-auto max-h-60 overflow-y-auto">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead>
+                            <tr class="border-b border-rose-900/40 text-slate-400">
+                                <th class="py-2 px-3">Row #</th>
+                                <th class="py-2 px-3">Severity</th>
+                                <th class="py-2 px-3">Field</th>
+                                <th class="py-2 px-3">Raw Value</th>
+                                <th class="py-2 px-3">Message</th>
+                            </tr>
+                        </thead>
+                        <tbody id="error-table-body" class="divide-y divide-rose-900/20"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Canonical Transactions Table -->
+            <div class="glass-panel rounded-2xl p-6 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="table-2" class="w-4 h-4 text-cyan-400"></i>
+                        <h4 class="text-sm font-bold text-white">Canonical Transaction Ledger</h4>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="filterTransactions('ALL')" id="filter-all" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-white font-medium border border-cyan-500">All</button>
+                        <button onclick="filterTransactions('DEBIT')" id="filter-debit" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700">Debits Only</button>
+                        <button onclick="filterTransactions('CREDIT')" id="filter-credit" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700">Credits Only</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg border border-slate-800">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/80">
+                                <th class="py-3 px-4 font-semibold">Transaction ID</th>
+                                <th class="py-3 px-4 font-semibold">Date (ISO)</th>
+                                <th class="py-3 px-4 font-semibold">Narration / Payee</th>
+                                <th class="py-3 px-4 font-semibold">Direction</th>
+                                <th class="py-3 px-4 font-semibold text-right">Amount (INR)</th>
+                                <th class="py-3 px-4 font-semibold">Ref / UTR</th>
+                                <th class="py-3 px-4 font-semibold text-right">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-table-body" class="divide-y divide-slate-800/60 font-mono">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        FinAgent • Built with FastAPI, Pydantic & Deterministic Financial Parsing Architecture
+    </footer>
+
+    <!-- App Logic Script -->
+    <script>
+        lucide.createIcons();
+
+        let currentJobId = null;
+        let currentMappings = [];
+        let allTransactions = [];
+        let activeFilter = 'ALL';
+
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('file-input');
+
+        dropzone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                uploadFile(e.target.files[0]);
+            }
+        });
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-cyan-400');
+        });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('border-cyan-400'));
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-cyan-400');
+            if (e.dataTransfer.files.length > 0) {
+                uploadFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        async function uploadFile(file) {
+            showProcessing("Uploading Statement", "Hashing with SHA-256 and registering ingestion job...");
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const res = await fetch("/api/v1/files/upload", {
+                    method: "POST",
+                    body: formData
+                });
+                if (!res.ok) throw new Error((await res.json()).detail || "Upload failed");
+                const data = await res.json();
+                currentJobId = data.job_id;
+                detectFile(currentJobId);
+            } catch (err) {
+                alert("Upload Error: " + err.message);
+                resetPipeline();
+            }
+        }
+
+        async function loadSampleStatement(bank) {
+            let fixtureName = "sample_hdfc_bank_statement.csv";
+            if (bank === "icici") fixtureName = "sample_icici_statement.xlsx";
+            if (bank === "sbi") fixtureName = "sample_sbi_statement.csv";
+
+            showProcessing("Loading Sample Statement", `Loading ${bank.toUpperCase()} synthetic fixture...`);
+            try {
+                // Fetch fixture from tests/fixtures
+                const res = await fetch(`/api/v1/parse-jobs/sample-${bank}`);
+            } catch (e) {}
+
+            // Direct upload of built-in demo content
+            let content, filename;
+            if (bank === "hdfc") {
+                filename = "hdfc_sample_statement.csv";
+                content = `HDFC BANK STATEMENT OF ACCOUNT\nACCOUNT NUMBER: 50100492817291\nBRANCH: BKC MUMBAI\nCURRENCY: INR\nDate,Narration,Chq/Ref No,Withdrawal Amt.,Deposit Amt.,Closing Balance\n01/10/2026,UPI-AMAZON PAY INDIA-429182@okhdfc,UPI0092817,1250.00,,98750.00\n02/10/2026,SALARY CREDIT OCT 2026 ACME CORP,SAL992810,,85000.00,183750.00\n03/10/2026,SWIGGY BANGALORE ORDER #9821,SWG882910,480.50,,183269.50\n04/10/2026,NEFT-ABC LOGISTICS CORP-SERVICES,NEFT881920,48500.00,,134769.50\n05/10/2026,ATM CASH WITHDRAWAL BKC BRANCH,ATM109281,10000.00,,124769.50\n06/10/2026,DIVIDEND TATA CONSULTANCY SERVICES,DIV887102,,3400.00,128169.50\n07/10/2026,ELECTRICITY BILL MSEB ONLINE,MSEB22910,2450.00,,125719.50`;
+            } else if (bank === "sbi") {
+                filename = "sbi_sample_statement.csv";
+                content = `State Bank of India - E-Statement\nCustomer Name: Rahul Sharma\nAccount No: 39019283741\nTxn Date,Particulars,Ref No,Debit,Credit,Balance\n01-Oct-2026,AMAZON SELLER SERVICES MUMBAI,UTR991827,"₹1,250.00",,"₹54,200.00"\n02-Oct-2026,OFFICE RENT OCT 2026,,"₹25,000.00",,"₹29,200.00"\n03-Oct-2026,CLIENT INVOICE #8928 PAYMENT,UTR771628,,"₹1,50,000.00","₹1,79,200.00"\nINVALID_DATE_ROW,CORRUPT ROW ENTRY,REF999,"₹500.00",,"₹1,78,700.00"\n05-Oct-2026,GOOGLE CLOUD SERVICES BILL,GCLD88192,"₹4,200.00",,"₹1,74,500.00"`;
+            } else {
+                filename = "icici_sample_statement.csv";
+                content = `Value Date,Transaction Details,Withdrawal (Dr),Deposit (Cr),Available Balance\n01/10/2026,NETFLIX SUBSCRIPTION MUMBAI,649.00,,45000.00\n02/10/2026,CONSULTING FEES INFLOW,,75000.00,120000.00\n03/10/2026,UBER INDIA TRAVEL,320.00,,119680.00\n04/10/2026,ZOMATO ONLINE ORDER,450.00,,119230.00`;
+            }
+
+            const blob = new Blob([content], { type: "text/csv" });
+            const file = new File([blob], filename, { type: "text/csv" });
+            uploadFile(file);
+        }
+
+        async function detectFile(jobId) {
+            showProcessing("Extracting & Mapping Schema", "Scanning header offsets and running RapidFuzz column match...");
+            try {
+                const res = await fetch(`/api/v1/parse-jobs/${jobId}/detect`, { method: "POST" });
+                if (!res.ok) throw new Error((await res.json()).detail || "Detection failed");
+                const data = await res.json();
+                renderMappingScreen(data);
+            } catch (err) {
+                alert("Detection Error: " + err.message);
+                resetPipeline();
+            }
+        }
+
+        function renderMappingScreen(data) {
+            document.getElementById('upload-section').classList.add('hidden');
+            document.getElementById('processing-section').classList.add('hidden');
+            document.getElementById('mapping-section').classList.remove('hidden');
+
+            document.getElementById('step-1').className = "h-9 w-9 rounded-full border-2 step-complete flex items-center justify-center font-bold text-sm bg-slate-900";
+            document.getElementById('step-2').className = "h-9 w-9 rounded-full border-2 step-active flex items-center justify-center font-bold text-sm bg-slate-900";
+
+            const badge = document.getElementById('mapping-confidence-badge');
+            badge.innerText = `Confidence: ${(data.confidence_score * 100).toFixed(0)}%`;
+
+            const tbody = document.getElementById('mapping-table-body');
+            tbody.innerHTML = "";
+            currentMappings = data.suggested_mappings;
+
+            const targetOptions = [
+                { val: "date", label: "Date (Required)" },
+                { val: "description", label: "Description / Narration (Required)" },
+                { val: "debit", label: "Debit Amount (Outflow)" },
+                { val: "credit", label: "Credit Amount (Inflow)" },
+                { val: "amount", label: "Signed / Net Amount" },
+                { val: "type", label: "Transaction Type (Dr/Cr)" },
+                { val: "reference", label: "Reference / UTR / Cheque" },
+                { val: "balance", label: "Running Balance" },
+                { val: "", label: "-- Ignore Column --" }
+            ];
+
+            currentMappings.forEach((m, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/40";
+
+                let methodBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">manual</span>`;
+                if (m.method === "alias") {
+                    methodBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">100% exact alias</span>`;
+                } else if (m.method === "fuzzy") {
+                    methodBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-950 text-blue-400 border border-blue-800">${(m.confidence * 100).toFixed(0)}% fuzzy match</span>`;
+                } else if (m.method === "heuristic") {
+                    methodBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-purple-950 text-purple-400 border border-purple-800">${(m.confidence * 100).toFixed(0)}% pattern inference</span>`;
+                }
+
+                const optionsHtml = targetOptions.map(opt => 
+                    `<option value="${opt.val}" ${m.target_field === opt.val ? 'selected' : ''}>${opt.label}</option>`
+                ).join("");
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-semibold text-slate-200">${m.source_column}</td>
+                    <td class="py-3 px-4 text-slate-400 text-[11px] truncate max-w-xs">${m.sample_values.join(", ") || "-"}</td>
+                    <td class="py-3 px-4">
+                        <select id="map-select-${idx}" class="bg-slate-900 border border-slate-700 text-xs rounded px-2.5 py-1 text-slate-200 focus:outline-none focus:border-cyan-500">
+                            ${optionsHtml}
+                        </select>
+                    </td>
+                    <td class="py-3 px-4">${methodBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        async function submitMappingAndExecute() {
+            showProcessing("Normalizing & Validating", "Running date format parsing, currency cleaning, and business rule validation...");
+            
+            // Build custom mappings
+            const mappingObj = {};
+            currentMappings.forEach((m, idx) => {
+                const sel = document.getElementById(`map-select-${idx}`);
+                if (sel && sel.value) {
+                    mappingObj[sel.value] = m.source_column;
+                }
+            });
+
+            try {
+                const res = await fetch(`/api/v1/parse-jobs/${currentJobId}/execute`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        mappings: mappingObj,
+                        currency: "INR"
+                    })
+                });
+                if (!res.ok) throw new Error((await res.json()).detail || "Execution failed");
+                const data = await res.json();
+                renderResultsScreen(data);
+            } catch (err) {
+                alert("Execution Error: " + err.message);
+                resetPipeline();
+            }
+        }
+
+        async function renderResultsScreen(data) {
+            document.getElementById('mapping-section').classList.add('hidden');
+            document.getElementById('processing-section').classList.add('hidden');
+            document.getElementById('results-section').classList.remove('hidden');
+
+            document.getElementById('step-2').className = "h-9 w-9 rounded-full border-2 step-complete flex items-center justify-center font-bold text-sm bg-slate-900";
+            document.getElementById('step-3').className = "h-9 w-9 rounded-full border-2 step-complete flex items-center justify-center font-bold text-sm bg-slate-900";
+            document.getElementById('step-4').className = "h-9 w-9 rounded-full border-2 step-complete flex items-center justify-center font-bold text-sm bg-slate-900";
+
+            document.getElementById('kpi-total').innerText = data.total_rows;
+            document.getElementById('kpi-valid').innerText = data.valid_rows;
+            document.getElementById('kpi-warnings').innerText = data.warning_rows;
+            document.getElementById('kpi-errors').innerText = data.error_rows;
+            document.getElementById('error-badge-count').innerText = data.warning_rows + data.error_rows;
+
+            // Fetch all transactions
+            const txRes = await fetch(`/api/v1/parse-jobs/${currentJobId}/transactions?limit=1000`);
+            allTransactions = await txRes.json();
+            renderTransactionsTable(allTransactions);
+
+            // Fetch errors
+            const errRes = await fetch(`/api/v1/parse-jobs/${currentJobId}/errors`);
+            const errors = await errRes.json();
+            renderErrorsTable(errors);
+        }
+
+        function renderTransactionsTable(txns) {
+            const tbody = document.getElementById('transaction-table-body');
+            tbody.innerHTML = "";
+
+            const filtered = txns.filter(t => {
+                if (activeFilter === 'DEBIT') return t.type === 'DEBIT';
+                if (activeFilter === 'CREDIT') return t.type === 'CREDIT';
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500">No transactions match current filter.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/40";
+                
+                const typeBadge = t.type === 'DEBIT'
+                    ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-950/80 text-rose-400 border border-rose-800">DR</span>`
+                    : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800">CR</span>`;
+
+                const formattedAmt = parseFloat(t.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                const formattedBal = t.balance ? parseFloat(t.balance).toLocaleString('en-IN', { minimumFractionDigits: 2 }) : "-";
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-semibold text-cyan-400 text-[11px]">${t.id}</td>
+                    <td class="py-3 px-4 text-slate-300">${t.date}</td>
+                    <td class="py-3 px-4 text-slate-200" title="${t.description_original}">${t.description}</td>
+                    <td class="py-3 px-4">${typeBadge}</td>
+                    <td class="py-3 px-4 text-right font-semibold ${t.type === 'DEBIT' ? 'text-rose-400' : 'text-emerald-400'}">₹${formattedAmt}</td>
+                    <td class="py-3 px-4 text-slate-400 text-[11px]">${t.reference || '<span class="text-slate-600">-</span>'}</td>
+                    <td class="py-3 px-4 text-right text-slate-400">₹${formattedBal}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderErrorsTable(errors) {
+            const tbody = document.getElementById('error-table-body');
+            tbody.innerHTML = "";
+            errors.forEach(e => {
+                const tr = document.createElement('tr');
+                const badge = e.severity === 'ERROR'
+                    ? `<span class="text-rose-400 font-bold">ERROR</span>`
+                    : `<span class="text-amber-400 font-bold">WARNING</span>`;
+                tr.innerHTML = `
+                    <td class="py-1.5 px-3 text-slate-300">#${e.row_number || '-'}</td>
+                    <td class="py-1.5 px-3">${badge}</td>
+                    <td class="py-1.5 px-3 text-slate-300">${e.field || '-'}</td>
+                    <td class="py-1.5 px-3 text-slate-500 truncate max-w-xs">${e.raw_value || '-'}</td>
+                    <td class="py-1.5 px-3 text-slate-300">${e.message}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTransactions(type) {
+            activeFilter = type;
+            document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+                btn.className = "px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700";
+            });
+            document.getElementById(`filter-${type.toLowerCase()}`).className = "px-2.5 py-1 text-xs rounded bg-slate-800 text-white font-medium border border-cyan-500";
+            renderTransactionsTable(allTransactions);
+        }
+
+        function toggleErrorDrawer() {
+            const drawer = document.getElementById('error-drawer');
+            drawer.classList.toggle('hidden');
+        }
+
+        async function downloadCanonicalJSON() {
+            const res = await fetch(`/api/v1/parse-jobs/${currentJobId}/export/canonical-json`);
+            const data = await res.json();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `finagent_canonical_statement_${currentJobId}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function showProcessing(title, desc) {
+            document.getElementById('upload-section').classList.add('hidden');
+            document.getElementById('mapping-section').classList.add('hidden');
+            document.getElementById('results-section').classList.add('hidden');
+            document.getElementById('processing-section').classList.remove('hidden');
+            document.getElementById('processing-title').innerText = title;
+            document.getElementById('processing-desc').innerText = desc;
+        }
+
+        function resetPipeline() {
+            document.getElementById('upload-section').classList.remove('hidden');
+            document.getElementById('processing-section').classList.add('hidden');
+            document.getElementById('mapping-section').classList.add('hidden');
+            document.getElementById('results-section').classList.add('hidden');
+            document.getElementById('step-1').className = "h-9 w-9 rounded-full border-2 step-active flex items-center justify-center font-bold text-sm bg-slate-900";
+            document.getElementById('step-2').className = "h-9 w-9 rounded-full border-2 border-slate-700 text-slate-500 flex items-center justify-center font-bold text-sm bg-slate-900";
+            document.getElementById('step-3').className = "h-9 w-9 rounded-full border-2 border-slate-700 text-slate-500 flex items-center justify-center font-bold text-sm bg-slate-900";
+            document.getElementById('step-4').className = "h-9 w-9 rounded-full border-2 border-slate-700 text-slate-500 flex items-center justify-center font-bold text-sm bg-slate-900";
+        }
+    </script>
+</body>
+</html>

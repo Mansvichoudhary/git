@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+.venv/
+venv/
+ENV/
+
+# Data and SQLite databases
+backend/data/
+*.db
+*.sqlite3
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+node_modules/
+.next/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
