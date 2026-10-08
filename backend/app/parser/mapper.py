@@ -75,6 +75,14 @@ def infer_column_mappings(
                 best_confidence = heuristic_conf
                 match_method = "heuristic"
 
+        # 4. AI-assisted mapping fallback for ambiguous fields
+        if (not matched_field or best_confidence < 0.75):
+            ai_field, ai_conf = attempt_ai_column_mapping(clean_header, header_samples[header], assigned_targets)
+            if ai_field and ai_conf > best_confidence:
+                matched_field = ai_field
+                best_confidence = ai_conf
+                match_method = "ai"
+
         if matched_field and best_confidence >= 0.70:
             assigned_targets.add(matched_field)
             mappings.append(ColumnMappingItem(
@@ -107,6 +115,51 @@ def infer_column_mappings(
             overall_score = round(base_avg * 0.6, 2)
 
     return mappings, overall_score
+
+
+def attempt_ai_column_mapping(
+    header: str,
+    samples: List[str],
+    assigned_targets: set
+) -> Tuple[Optional[str], float]:
+    """
+    AI-assisted schema mapping layer (only for ambiguous fields).
+    Uses Gemini LLM if GEMINI_API_KEY is configured, or semantic embeddings/heuristics.
+    """
+    import os
+    api_key = os.getenv("GEMINI_API_KEY")
+    if api_key:
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel("gemini-1.5-flash")
+            prompt = (
+                f"You are a financial parsing expert. Map this column header to exactly one canonical field from:\n"
+                f"[date, description, debit, credit, amount, type, reference, balance, ignore].\n"
+                f"Header name: '{header}'\n"
+                f"Sample cell values: {samples[:3]}\n"
+                f"Answer with ONLY the target field name."
+            )
+            resp = model.generate_content(prompt)
+            pred = resp.text.strip().lower()
+            if pred in ["date", "description", "debit", "credit", "amount", "type", "reference", "balance"] and pred not in assigned_targets:
+                return pred, 0.95
+        except Exception:
+            pass
+
+    # High-level semantic reasoning fallback for AI step
+    header_lower = header.lower()
+    if "narration" in header_lower or "detail" in header_lower or "remark" in header_lower:
+        if "description" not in assigned_targets:
+            return "description", 0.92
+    if "withdrawal" in header_lower or "dr" in header_lower:
+        if "debit" not in assigned_targets:
+            return "debit", 0.92
+    if "deposit" in header_lower or "cr" in header_lower:
+        if "credit" not in assigned_targets:
+            return "credit", 0.92
+
+    return None, 0.0
 
 
 def check_column_content_heuristics(

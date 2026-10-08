@@ -35,11 +35,16 @@ def validate_and_build_canonical_transaction(
     row_number: int,
     column_mapping: Dict[str, str],  # target_field -> source_column
     account_number: str = "DEFAULT_ACC",
-    currency: str = "INR"
+    currency: str = "INR",
+    reconciliation_id: str = "REC_DEMO_01",
+    source_id: str = "SRC_DEMO_BANK",
+    source_type: str = "BANK_STATEMENT",
+    provenance: Optional[Dict[str, Any]] = None,
+    page_number: int = 1
 ) -> Tuple[Optional[CanonicalTransaction], List[ParseErrorDetail]]:
     """
     Validates a single raw row against financial business rules.
-    Returns (CanonicalTransaction, list_of_errors_or_warnings).
+    Populates full audit provenance, source_type, and canonical fields.
     """
     errors: List[ParseErrorDetail] = []
 
@@ -51,6 +56,7 @@ def validate_and_build_canonical_transaction(
     if not parsed_date:
         errors.append(ParseErrorDetail(
             row_number=row_number,
+            page_number=page_number,
             field="date",
             raw_value=str(raw_date),
             severity="ERROR",
@@ -65,6 +71,7 @@ def validate_and_build_canonical_transaction(
     if not clean_desc:
         errors.append(ParseErrorDetail(
             row_number=row_number,
+            page_number=page_number,
             field="description",
             raw_value=str(raw_desc),
             severity="ERROR",
@@ -87,6 +94,7 @@ def validate_and_build_canonical_transaction(
     if amount_err or amount is None or amount <= 0:
         errors.append(ParseErrorDetail(
             row_number=row_number,
+            page_number=page_number,
             field="amount",
             raw_value=f"debit={raw_row.get(debit_col)}, credit={raw_row.get(credit_col)}, amount={raw_row.get(amount_col)}",
             severity="ERROR",
@@ -101,6 +109,7 @@ def validate_and_build_canonical_transaction(
     if not clean_ref:
         errors.append(ParseErrorDetail(
             row_number=row_number,
+            page_number=page_number,
             field="reference",
             raw_value=str(raw_ref),
             severity="WARNING",
@@ -128,8 +137,17 @@ def validate_and_build_canonical_transaction(
         source_row=row_number
     )
 
+    prov_dict = provenance or {
+        "page": page_number,
+        "row": row_number,
+        "raw_description": original_desc
+    }
+
     canonical_txn = CanonicalTransaction(
         id=txn_id,
+        reconciliation_id=reconciliation_id,
+        source_id=source_id,
+        source_type=source_type,
         date=parsed_date,
         description=clean_desc,
         description_original=original_desc,
@@ -138,6 +156,8 @@ def validate_and_build_canonical_transaction(
         reference=clean_ref,
         balance=clean_bal,
         currency=currency,
+        account_id=account_number,
+        provenance=prov_dict,
         source_row=row_number
     )
 

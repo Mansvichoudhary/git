@@ -6,12 +6,13 @@ from pathlib import Path
 
 from app.core.database import init_db
 from app.api.routes_ingestion import router as ingestion_router
+from app.api.routes_reconciliation import router as reconciliation_router
 
 # Initialize FastAPI App
 app = FastAPI(
-    title="FinAgent — Data Ingestion & Parse Engine (Part 1)",
-    description="Automated multi-bank financial statement parsing, intelligent schema mapping, and canonical normalization.",
-    version="1.0.0"
+    title="FinAgent — Financial Ingestion & Anomaly Investigation Agent",
+    description="Automated multi-bank financial statement parsing, deterministic reconciliation, and forensic AI anomaly investigation.",
+    version="2.0.0"
 )
 
 # Enable CORS for local UI and microservices
@@ -28,8 +29,9 @@ app.add_middleware(
 def startup_event():
     init_db()
 
-# Include API Router
+# Include API Routers
 app.include_router(ingestion_router)
+app.include_router(reconciliation_router)
 
 # Mount frontend if present
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"

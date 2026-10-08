@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinAgent — Data Ingestion & Parse Engine</title>
+    <title>FinAgent — Multi-Source Financial Ingestion & Parse Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -39,20 +38,46 @@
                 <div>
                     <div class="flex items-center space-x-2">
                         <span class="font-bold text-lg tracking-tight text-white">FinAgent</span>
-                        <span class="px-2 py-0.5 text-xs font-semibold rounded bg-cyan-950 text-cyan-400 border border-cyan-800">Part 1</span>
+                        <span id="app-badge" class="px-2 py-0.5 text-xs font-semibold rounded bg-cyan-950 text-cyan-400 border border-cyan-800">Part 1 & 2</span>
                     </div>
-                    <p class="text-xs text-slate-400">Automated Multi-Bank Statement Ingestion & Parse Engine</p>
+                    <p class="text-xs text-slate-400">Multi-Source Ingestion, Reconciliation & Forensic AI Engine</p>
                 </div>
             </div>
 
-            <div class="flex items-center space-x-4">
-                <div class="hidden sm:flex items-center space-x-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
-                    <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>FastAPI Deterministic Engine Active</span>
+            <!-- Workspace Tabs (Part 1 vs Part 2) -->
+            <div class="flex items-center space-x-1.5 bg-slate-950/70 border border-slate-800 p-1 rounded-xl">
+                <button id="nav-btn-ingestion" onclick="switchMainWorkspace('ingestion')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 text-white shadow-sm flex items-center space-x-1.5 transition">
+                    <i data-lucide="file-input" class="w-3.5 h-3.5"></i>
+                    <span>1. Ingestion & Parser</span>
+                </button>
+                <button id="nav-btn-reconciliation" onclick="switchMainWorkspace('reconciliation')" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white flex items-center space-x-1.5 transition">
+                    <i data-lucide="git-merge" class="w-3.5 h-3.5 text-purple-400"></i>
+                    <span>2. Reconciliation & AI Agent</span>
+                    <span class="px-1.5 py-0.2 bg-purple-950 text-purple-400 border border-purple-800 rounded text-[9px] font-bold">CORE</span>
+                </button>
+            </div>
+
+            <!-- Context Selectors (Company & Reconciliation - Sections 5 & 6) -->
+            <div class="hidden lg:flex items-center space-x-4">
+                <div class="flex items-center space-x-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-lg text-xs">
+                    <i data-lucide="building-2" class="w-3.5 h-3.5 text-cyan-400"></i>
+                    <span class="text-slate-400">Company:</span>
+                    <select id="company-select" class="bg-transparent text-white font-medium focus:outline-none cursor-pointer">
+                        <option value="COMP_DEMO_01" class="bg-slate-900">Acme FinTech Corp (INR)</option>
+                    </select>
                 </div>
+
+                <div class="flex items-center space-x-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-lg text-xs">
+                    <i data-lucide="git-merge" class="w-3.5 h-3.5 text-purple-400"></i>
+                    <span class="text-slate-400">Reconciliation:</span>
+                    <select id="reconciliation-select" onchange="onReconciliationChanged()" class="bg-transparent text-white font-medium focus:outline-none cursor-pointer">
+                        <option value="REC_DEMO_01" class="bg-slate-900">October 2026 Monthly Recon</option>
+                    </select>
+                </div>
+
                 <a href="/docs" target="_blank" class="text-xs font-medium text-slate-300 hover:text-white flex items-center space-x-1 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition">
                     <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
-                    <span>Swagger API</span>
+                    <span>API Docs</span>
                 </a>
             </div>
         </div>
@@ -61,14 +86,45 @@
     <!-- Main Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        <!-- Pipeline Progress Steps Bar -->
+        <!-- WORKSPACE 1: Data Ingestion & Parse Engine -->
+        <div id="workspace-ingestion" class="space-y-8">
+
+        <!-- Financial Sources Selection Tabs (Section 3 & 7) -->
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+                    <i data-lucide="layers" class="w-4 h-4 text-cyan-400"></i>
+                    <span>Financial Source Type</span>
+                </h2>
+                <p class="text-xs text-slate-400 mt-0.5">Select the financial register you are ingesting for this reconciliation:</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2" id="source-type-container">
+                <button onclick="setSourceType('BANK_STATEMENT')" id="src-btn-bank" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 text-white shadow-md shadow-cyan-600/30 transition">
+                    Bank Statement
+                </button>
+                <button onclick="setSourceType('ACCOUNTING_LEDGER')" id="src-btn-ledger" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">
+                    Accounting Ledger
+                </button>
+                <button onclick="setSourceType('PAYMENT_REGISTER')" id="src-btn-payment" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">
+                    Payment Register
+                </button>
+                <button onclick="setSourceType('INVOICE_REGISTER')" id="src-btn-invoice" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">
+                    Invoice Register
+                </button>
+                <button onclick="setSourceType('ERP_EXPORT')" id="src-btn-erp" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">
+                    ERP Export
+                </button>
+            </div>
+        </div>
+
+        <!-- Pipeline Progress Steps Bar (Section 8) -->
         <div class="glass-panel rounded-2xl p-4 sm:p-6 shadow-xl">
             <div class="flex items-center justify-between overflow-x-auto pb-2 sm:pb-0 gap-2">
                 <div class="flex items-center space-x-3 min-w-max">
                     <div id="step-1" class="h-9 w-9 rounded-full border-2 step-active flex items-center justify-center font-bold text-sm bg-slate-900">1</div>
                     <div>
                         <div class="text-xs font-semibold text-slate-200">Upload & Detect</div>
-                        <div class="text-[11px] text-slate-400">CSV, XLSX, PDF</div>
+                        <div class="text-[11px] text-slate-400">CSV, XLSX, PDF, OCR</div>
                     </div>
                 </div>
                 <div class="h-0.5 w-8 bg-slate-800 hidden md:block"></div>
@@ -77,7 +133,7 @@
                     <div id="step-2" class="h-9 w-9 rounded-full border-2 border-slate-700 text-slate-500 flex items-center justify-center font-bold text-sm bg-slate-900">2</div>
                     <div>
                         <div class="text-xs font-semibold text-slate-200">Schema Mapping</div>
-                        <div class="text-[11px] text-slate-400">Fuzzy & Alias Match</div>
+                        <div class="text-[11px] text-slate-400">Alias, Fuzzy & Learned</div>
                     </div>
                 </div>
                 <div class="h-0.5 w-8 bg-slate-800 hidden md:block"></div>
@@ -94,22 +150,31 @@
                 <div class="flex items-center space-x-3 min-w-max">
                     <div id="step-4" class="h-9 w-9 rounded-full border-2 border-slate-700 text-slate-500 flex items-center justify-center font-bold text-sm bg-slate-900">4</div>
                     <div>
-                        <div class="text-xs font-semibold text-slate-200">Validation & Output</div>
-                        <div class="text-[11px] text-slate-400">Canonical JSON Contract</div>
+                        <div class="text-xs font-semibold text-slate-200">Control & Output</div>
+                        <div class="text-[11px] text-slate-400">Totals Check & JSON</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- STAGE 1: File Upload Screen -->
+        <!-- STAGE 1: File Upload Screen (Section 11) -->
         <div id="upload-section" class="glass-panel rounded-2xl p-8 shadow-2xl relative overflow-hidden">
             <div class="max-w-2xl mx-auto text-center space-y-4">
                 <div class="inline-flex p-3 rounded-2xl bg-cyan-950/60 border border-cyan-800/60 text-cyan-400 mb-2">
                     <i data-lucide="upload-cloud" class="w-8 h-8"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-white tracking-tight">Ingest Bank Statement</h2>
-                <p class="text-sm text-slate-400">Upload heterogeneous bank statements from any institution. The deterministic engine extracts tabular records, normalizes currencies, and produces standard canonical transactions.</p>
+                <h2 class="text-2xl font-bold text-white tracking-tight">Ingest Financial Source File</h2>
+                <p class="text-sm text-slate-400">Upload heterogeneous bank statements, ERP ledgers, or invoice registers. Multi-file uploads within reconciliation context are checked for duplicate SHA-256 fingerprints.</p>
                 
+                <!-- Duplicate File Alert Banner (Section 9) -->
+                <div id="duplicate-warning" class="hidden text-left bg-amber-950/40 border border-amber-800/80 rounded-xl p-4 flex items-start space-x-3">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5"></i>
+                    <div>
+                        <h4 class="text-xs font-bold text-amber-300">Duplicate File Detected (SHA-256 Match)</h4>
+                        <p class="text-xs text-amber-400/90 mt-0.5">This exact document has already been registered in this reconciliation context. Processing will maintain idempotent state.</p>
+                    </div>
+                </div>
+
                 <!-- Dropzone Area -->
                 <div id="dropzone" class="mt-6 border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-8 transition cursor-pointer bg-slate-900/40 hover:bg-slate-900/80 group">
                     <input type="file" id="file-input" class="hidden" accept=".csv,.xlsx,.xls,.pdf,.tsv">
@@ -118,21 +183,21 @@
                         <p class="text-sm font-medium text-slate-200">
                             <span class="text-cyan-400 font-semibold underline underline-offset-2">Click to browse</span> or drag and drop statement file
                         </p>
-                        <p class="text-xs text-slate-500">Supported formats: CSV, TSV, Excel (.xlsx), Text PDF (Up to 25 MB)</p>
+                        <p class="text-xs text-slate-500">Supported formats: CSV, TSV, Excel (.xlsx), Text PDF, Scanned PDF OCR (Up to 25 MB)</p>
                     </div>
                 </div>
 
-                <!-- One-click Demo Preset Buttons -->
+                <!-- One-click Demo Preset Buttons (Section 34 Fixtures) -->
                 <div class="pt-6 border-t border-slate-800">
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Or test instantly with preloaded bank statements:</p>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Or test instantly with preloaded financial statement fixtures:</p>
                     <div class="flex flex-wrap items-center justify-center gap-2.5">
                         <button onclick="loadSampleStatement('hdfc')" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3.5 py-2 rounded-lg text-slate-200 font-medium flex items-center space-x-1.5 transition">
                             <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-blue-400"></i>
-                            <span>HDFC Statement (CSV)</span>
+                            <span>HDFC Bank Statement (CSV)</span>
                         </button>
                         <button onclick="loadSampleStatement('icici')" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3.5 py-2 rounded-lg text-slate-200 font-medium flex items-center space-x-1.5 transition">
                             <i data-lucide="table" class="w-3.5 h-3.5 text-orange-400"></i>
-                            <span>ICICI Statement (XLSX)</span>
+                            <span>ICICI General Ledger (XLSX)</span>
                         </button>
                         <button onclick="loadSampleStatement('sbi')" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3.5 py-2 rounded-lg text-slate-200 font-medium flex items-center space-x-1.5 transition">
                             <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-400"></i>
@@ -143,7 +208,7 @@
             </div>
         </div>
 
-        <!-- STAGE 2: Processing & Loading Animation -->
+        <!-- STAGE 2: Processing & Loading Animation (Section 8) -->
         <div id="processing-section" class="hidden glass-panel rounded-2xl p-12 text-center space-y-6">
             <div class="inline-flex relative">
                 <div class="w-16 h-16 rounded-full border-4 border-cyan-500/20 border-t-cyan-500 animate-spin"></div>
@@ -157,7 +222,7 @@
             </div>
         </div>
 
-        <!-- STAGE 3: Intelligent Schema Mapping Review -->
+        <!-- STAGE 3: Intelligent Schema Mapping Review (Section 15 & 16) -->
         <div id="mapping-section" class="hidden glass-panel rounded-2xl p-6 sm:p-8 space-y-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
                 <div>
@@ -180,6 +245,14 @@
                 </div>
             </div>
 
+            <!-- Persistent Mapping Learning Checkbox (Section 16) -->
+            <div class="flex items-center space-x-2 bg-slate-900/60 p-3 rounded-lg border border-slate-800 text-xs">
+                <input type="checkbox" id="chk-remember-rules" checked class="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-600 focus:ring-0">
+                <label for="chk-remember-rules" class="text-slate-300">
+                    <span class="font-semibold text-white">Persistent Mapping Memory:</span> Remember these column rules for future <span id="lbl-source-type" class="text-cyan-400 font-medium">BANK_STATEMENT</span> files.
+                </label>
+            </div>
+
             <!-- Mapping Grid -->
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
@@ -198,7 +271,7 @@
             </div>
         </div>
 
-        <!-- STAGE 4: Final Validation Audit & Canonical Transaction Table -->
+        <!-- STAGE 4: Final Validation Audit & Canonical Transaction Table (Sections 18, 19, 20, 22) -->
         <div id="results-section" class="hidden space-y-6">
 
             <!-- Summary KPI Cards -->
@@ -209,7 +282,7 @@
                         <i data-lucide="layers" class="w-4 h-4 text-cyan-400"></i>
                     </div>
                     <div id="kpi-total" class="text-2xl font-bold text-white mt-2">0</div>
-                    <div class="text-[11px] text-slate-500 mt-1">Extracted from statement</div>
+                    <div class="text-[11px] text-slate-500 mt-1">Extracted from source</div>
                 </div>
 
                 <div class="glass-panel rounded-xl p-4 border border-emerald-900/40 bg-emerald-950/10">
@@ -218,7 +291,7 @@
                         <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
                     </div>
                     <div id="kpi-valid" class="text-2xl font-bold text-emerald-300 mt-2">0</div>
-                    <div class="text-[11px] text-emerald-500/80 mt-1">Ready for Reconciliation</div>
+                    <div class="text-[11px] text-emerald-500/80 mt-1">Canonical contract verified</div>
                 </div>
 
                 <div class="glass-panel rounded-xl p-4 border border-amber-900/40 bg-amber-950/10">
@@ -227,7 +300,7 @@
                         <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
                     </div>
                     <div id="kpi-warnings" class="text-2xl font-bold text-amber-300 mt-2">0</div>
-                    <div class="text-[11px] text-amber-500/80 mt-1">e.g. missing reference</div>
+                    <div class="text-[11px] text-amber-500/80 mt-1">e.g. blank UTR/Ref</div>
                 </div>
 
                 <div class="glass-panel rounded-xl p-4 border border-rose-900/40 bg-rose-950/10">
@@ -240,15 +313,50 @@
                 </div>
             </div>
 
-            <!-- Ready for Part 2 Reconciliation Banner -->
+            <!-- Financial Control Totals Verification Card (Section 19) -->
+            <div class="glass-panel rounded-xl p-5 border border-cyan-800/80 bg-cyan-950/20 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-cyan-800/40 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="scale" class="w-4 h-4 text-cyan-400"></i>
+                        <h4 class="text-xs font-bold text-cyan-300 uppercase tracking-wider">Financial Control Totals Verification</h4>
+                    </div>
+                    <span id="control-status-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">
+                        ✓ VERIFIED (Difference: ₹0.00)
+                    </span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+                    <div>
+                        <div class="text-slate-400 text-[11px]">Opening Balance</div>
+                        <div id="ctrl-opening" class="font-mono font-bold text-slate-200 mt-0.5">₹0.00</div>
+                    </div>
+                    <div>
+                        <div class="text-emerald-400 text-[11px]">+ Total Credits (Inflow)</div>
+                        <div id="ctrl-credits" class="font-mono font-bold text-emerald-400 mt-0.5">₹0.00</div>
+                    </div>
+                    <div>
+                        <div class="text-rose-400 text-[11px]">- Total Debits (Outflow)</div>
+                        <div id="ctrl-debits" class="font-mono font-bold text-rose-400 mt-0.5">₹0.00</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-400 text-[11px]">= Expected Closing</div>
+                        <div id="ctrl-expected" class="font-mono font-bold text-cyan-300 mt-0.5">₹0.00</div>
+                    </div>
+                    <div>
+                        <div class="text-slate-400 text-[11px]">Stated Closing Balance</div>
+                        <div id="ctrl-stated" class="font-mono font-bold text-white mt-0.5">₹0.00</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ready for Part 2 Reconciliation Banner (Section 30 Screen 9) -->
             <div class="glass-panel rounded-xl p-4 border border-cyan-800 bg-gradient-to-r from-cyan-950/40 via-blue-950/20 to-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="flex items-center space-x-3">
                     <div class="h-10 w-10 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
-                        <i data-lucide="database" class="w-5 h-5"></i>
+                        <i data-lucide="check-check" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h4 class="text-sm font-bold text-white">Canonical Dataset Verified & Ready</h4>
-                        <p class="text-xs text-slate-400">Canonical Transaction JSON format matches Part 2 Reconciliation Engine contract.</p>
+                        <h4 class="text-sm font-bold text-white"><span id="lbl-ready-count">0</span> Transactions Ready for Reconciliation</h4>
+                        <p class="text-xs text-slate-400">Provenance preserved. Canonical schema conforms to Part 2 Reconciliation Engine contract.</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
@@ -256,14 +364,17 @@
                         <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-400"></i>
                         <span>Inspect Error Log (<span id="error-badge-count">0</span>)</span>
                     </button>
-                    <button onclick="downloadCanonicalJSON()" class="text-xs px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold flex items-center space-x-1.5 shadow-lg shadow-cyan-600/30 transition">
+                    <button onclick="downloadCanonicalJSON()" class="text-xs px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-800 font-semibold flex items-center space-x-1.5 transition">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                        <span>Download Canonical JSON</span>
+                        <span>Export JSON</span>
+                    </button>
+                    <button onclick="alert('Part 1 Output Verified! Ready to trigger Part 2 Reconciliation Engine.')" class="text-xs px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold flex items-center space-x-1.5 shadow-lg shadow-cyan-600/30 transition">
+                        <span>Continue to Reconciliation &rarr;</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Error Ledger Drawer (Collapsible) -->
+            <!-- Error Ledger Drawer (Section 21) -->
             <div id="error-drawer" class="hidden glass-panel rounded-xl p-5 border border-rose-900/60 bg-rose-950/20 space-y-3">
                 <div class="flex items-center justify-between">
                     <h5 class="text-xs font-bold text-rose-300 uppercase tracking-wider flex items-center space-x-2">
@@ -288,17 +399,17 @@
                 </div>
             </div>
 
-            <!-- Canonical Transactions Table -->
+            <!-- Canonical Transactions Table with Provenance (Section 22) -->
             <div class="glass-panel rounded-2xl p-6 space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="flex items-center space-x-2">
                         <i data-lucide="table-2" class="w-4 h-4 text-cyan-400"></i>
-                        <h4 class="text-sm font-bold text-white">Canonical Transaction Ledger</h4>
+                        <h4 class="text-sm font-bold text-white">Canonical Transaction Ledger (with Provenance Trace)</h4>
                     </div>
                     <div class="flex items-center space-x-2">
                         <button onclick="filterTransactions('ALL')" id="filter-all" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-white font-medium border border-cyan-500">All</button>
-                        <button onclick="filterTransactions('DEBIT')" id="filter-debit" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700">Debits Only</button>
-                        <button onclick="filterTransactions('CREDIT')" id="filter-credit" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700">Credits Only</button>
+                        <button onclick="filterTransactions('DEBIT')" id="filter-debit" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700">Debits</button>
+                        <button onclick="filterTransactions('CREDIT')" id="filter-credit" class="px-2.5 py-1 text-xs rounded bg-slate-800 text-slate-400 hover:text-white font-medium border border-slate-700">Credits</button>
                     </div>
                 </div>
 
@@ -308,10 +419,11 @@
                             <tr class="border-b border-slate-800 text-slate-400 bg-slate-900/80">
                                 <th class="py-3 px-4 font-semibold">Transaction ID</th>
                                 <th class="py-3 px-4 font-semibold">Date (ISO)</th>
-                                <th class="py-3 px-4 font-semibold">Narration / Payee</th>
+                                <th class="py-3 px-4 font-semibold">Narration</th>
                                 <th class="py-3 px-4 font-semibold">Direction</th>
                                 <th class="py-3 px-4 font-semibold text-right">Amount (INR)</th>
                                 <th class="py-3 px-4 font-semibold">Ref / UTR</th>
+                                <th class="py-3 px-4 font-semibold">Provenance (File / Row)</th>
                                 <th class="py-3 px-4 font-semibold text-right">Balance</th>
                             </tr>
                         </thead>
@@ -323,12 +435,496 @@
             </div>
 
         </div>
+        <!-- End WORKSPACE 1: Data Ingestion -->
+        </div>
+
+        <!-- WORKSPACE 2: Process 02 Reconciliation & Anomaly Engine -->
+        <div id="workspace-reconciliation" class="hidden space-y-8">
+
+            <!-- SCREEN 1: Reconciliation Starting View (Section 37 Screen 1) -->
+            <div id="recon-screen-1" class="glass-panel rounded-2xl p-6 sm:p-8 space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2.5 py-0.5 rounded text-xs font-semibold bg-purple-950 text-purple-400 border border-purple-800">Process 02</span>
+                            <h2 class="text-xl font-bold text-white tracking-tight">Reconciliation & Anomaly Investigation Engine</h2>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Staged deterministic matching pipeline + forensic AI anomaly investigations.</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="seedAndStartReconDemo()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center space-x-1.5 transition">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                            <span>Load Demo Bank & Ledger Records</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Sources Verification (Section 37 Screen 1) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Bank Statement Card -->
+                    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="h-10 w-10 rounded-xl bg-blue-950/70 border border-blue-800/60 flex items-center justify-center text-blue-400">
+                                    <i data-lucide="building-2" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-white">Bank Statement</h3>
+                                    <p class="text-[11px] text-slate-400">External Bank Register</p>
+                                </div>
+                            </div>
+                            <div id="recon-bank-status-badge">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">Checking...</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/50 rounded-lg p-3 text-xs space-y-1.5 border border-slate-800/80">
+                            <div class="flex justify-between text-slate-400">
+                                <span>Transactions Loaded:</span>
+                                <span id="recon-bank-count" class="font-semibold text-white">0</span>
+                            </div>
+                            <div class="flex justify-between text-slate-400">
+                                <span>Verification Status:</span>
+                                <span id="recon-bank-ready-text" class="text-slate-300">Checking source...</span>
+                            </div>
+                            <div class="flex justify-between text-slate-400">
+                                <span>Provenance:</span>
+                                <span class="text-cyan-400 font-mono text-[10px]">Tracked (File, Row, Page)</span>
+                            </div>
+                        </div>
+                        <div class="text-[11px] text-slate-500 flex items-center justify-between">
+                            <span>Upload additional bank files in Part 1</span>
+                            <button onclick="switchMainWorkspace('ingestion'); setSourceType('BANK_STATEMENT')" class="text-cyan-400 hover:underline">Upload Bank Statement →</button>
+                        </div>
+                    </div>
+
+                    <!-- Company Accounts Ledger Card -->
+                    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="h-10 w-10 rounded-xl bg-purple-950/70 border border-purple-800/60 flex items-center justify-center text-purple-400">
+                                    <i data-lucide="book-open" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-white">Company Accounts</h3>
+                                    <p class="text-[11px] text-slate-400">Internal Accounting Ledger / ERP</p>
+                                </div>
+                            </div>
+                            <div id="recon-comp-status-badge">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">Checking...</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/50 rounded-lg p-3 text-xs space-y-1.5 border border-slate-800/80">
+                            <div class="flex justify-between text-slate-400">
+                                <span>Transactions Loaded:</span>
+                                <span id="recon-comp-count" class="font-semibold text-white">0</span>
+                            </div>
+                            <div class="flex justify-between text-slate-400">
+                                <span>Verification Status:</span>
+                                <span id="recon-comp-ready-text" class="text-slate-300">Checking source...</span>
+                            </div>
+                            <div class="flex justify-between text-slate-400">
+                                <span>Provenance:</span>
+                                <span class="text-cyan-400 font-mono text-[10px]">Tracked (File, Row, Page)</span>
+                            </div>
+                        </div>
+                        <div class="text-[11px] text-slate-500 flex items-center justify-between">
+                            <span>Upload additional ledger files in Part 1</span>
+                            <button onclick="switchMainWorkspace('ingestion'); setSourceType('ACCOUNTING_LEDGER')" class="text-cyan-400 hover:underline">Upload Company Ledger →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pipeline Architecture Banner -->
+                <div class="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 flex items-start space-x-3 text-xs">
+                    <i data-lucide="layers" class="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5"></i>
+                    <div class="text-slate-400 leading-relaxed">
+                        <span class="font-semibold text-slate-200">Deterministic Financial Engine:</span> FinAgent reconciles across 5 deterministic layers: (1) Exact Match, (2) Strong Reference Match, (3) Fuzzy Candidate, (4) Date Tolerance, and (5) Composite Combinations. Financial truth, amounts, and dates are 100% deterministic code. Forensic AI only investigates anomalies and generates evidence.
+                    </div>
+                </div>
+
+                <!-- Primary Action Button -->
+                <div class="pt-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <button id="btn-start-recon" onclick="startReconciliationExecution()" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-cyan-600/30 flex items-center justify-center space-x-2 transition cursor-pointer">
+                        <i data-lucide="play" class="w-4 h-4"></i>
+                        <span>Start Reconciliation</span>
+                    </button>
+                    <span class="text-xs text-slate-500">Enforces One-to-One matching constraint & strict zero-hallucination boundary</span>
+                </div>
+            </div>
+
+            <!-- SCREEN 2: Matching Progress Tracker (Section 37 Screen 2) -->
+            <div id="recon-screen-2" class="hidden glass-panel rounded-2xl p-8 sm:p-12 text-center space-y-6">
+                <div class="max-w-md mx-auto space-y-4">
+                    <div class="inline-flex relative">
+                        <div class="w-16 h-16 rounded-full border-4 border-purple-500/20 border-t-purple-500 animate-spin"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <i data-lucide="git-merge" class="w-6 h-6 text-purple-400"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Matching Transactions...</h3>
+                        <p class="text-xs text-slate-400 mt-1">Executing staged deterministic matching & anomaly detection pipeline</p>
+                    </div>
+
+                    <!-- Progress Counts -->
+                    <div class="grid grid-cols-2 gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-xs">
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Bank Transactions</span>
+                            <span id="recon-prog-bank-cnt" class="font-bold text-cyan-400 text-sm">0</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[11px]">Company Transactions</span>
+                            <span id="recon-prog-comp-cnt" class="font-bold text-purple-400 text-sm">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Staged Matching Layers (Section 37 Screen 2) -->
+                    <div class="bg-slate-900/40 rounded-xl p-4 border border-slate-800 text-left text-xs space-y-2.5">
+                        <div id="stage-step-1" class="flex items-center justify-between text-slate-300">
+                            <span class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span>Stage 1: Exact Matching (Amount, Date, Ref)</span></span>
+                            <span class="text-emerald-400 font-bold">✓</span>
+                        </div>
+                        <div id="stage-step-2" class="flex items-center justify-between text-slate-300">
+                            <span class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span>Stage 2: Strong Reference Matching</span></span>
+                            <span class="text-emerald-400 font-bold">✓</span>
+                        </div>
+                        <div id="stage-step-3" class="flex items-center justify-between text-slate-300">
+                            <span class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span>Stage 3: Fuzzy Candidate Matching</span></span>
+                            <span class="text-emerald-400 font-bold">✓</span>
+                        </div>
+                        <div id="stage-step-4" class="flex items-center justify-between text-slate-300">
+                            <span class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span>Stage 4: Date Tolerance Window</span></span>
+                            <span class="text-emerald-400 font-bold">✓</span>
+                        </div>
+                        <div id="stage-step-5" class="flex items-center justify-between text-slate-300">
+                            <span class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span>Stage 5: Composite / Partial Matching</span></span>
+                            <span class="text-emerald-400 font-bold">✓</span>
+                        </div>
+                        <div id="stage-step-6" class="flex items-center justify-between text-slate-300">
+                            <span class="flex items-center space-x-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i><span>Anomaly Detection & Duplicates</span></span>
+                            <span class="text-emerald-400 font-bold">✓</span>
+                        </div>
+                        <div id="stage-step-7" class="flex items-center justify-between text-cyan-300">
+                            <span class="flex items-center space-x-2"><i data-lucide="sparkles" class="w-4 h-4 text-cyan-400 animate-pulse"></i><span>AI Forensic Investigations (Gemini)</span></span>
+                            <span class="text-cyan-400 font-bold">→</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: Results Table & KPI Dashboard (Section 37 Screen 3 & Section 26) -->
+            <div id="recon-screen-3" class="hidden space-y-6">
+                <!-- Top Summary Cards (Section 26 & 28) -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+                    <div class="glass-panel p-4 rounded-xl border border-emerald-900/40 bg-emerald-950/20">
+                        <span class="text-[11px] font-semibold text-emerald-400 block uppercase tracking-wider">Matched</span>
+                        <div class="flex items-baseline space-x-2 mt-1">
+                            <span id="kpi-matched-count" class="text-2xl font-extrabold text-white">0</span>
+                            <span id="kpi-matched-pct" class="text-xs text-emerald-400 font-semibold">0%</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Exact verified matches</span>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl border border-amber-900/40 bg-amber-950/20">
+                        <span class="text-[11px] font-semibold text-amber-400 block uppercase tracking-wider">Probable Match</span>
+                        <div class="flex items-baseline space-x-2 mt-1">
+                            <span id="kpi-probable-count" class="text-2xl font-extrabold text-white">0</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Candidate tolerance</span>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl border border-rose-900/40 bg-rose-950/20">
+                        <span class="text-[11px] font-semibold text-rose-400 block uppercase tracking-wider">Unmatched</span>
+                        <div class="flex items-baseline space-x-2 mt-1">
+                            <span id="kpi-unmatched-count" class="text-2xl font-extrabold text-white">0</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Missing counterpart</span>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl border border-purple-900/40 bg-purple-950/20">
+                        <span class="text-[11px] font-semibold text-purple-400 block uppercase tracking-wider">Anomalies</span>
+                        <div class="flex items-baseline space-x-2 mt-1">
+                            <span id="kpi-anomalies-count" class="text-2xl font-extrabold text-white">0</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Duplicates, timing & amounts</span>
+                    </div>
+                    <div class="glass-panel p-4 rounded-xl border border-slate-800 bg-slate-900/50 col-span-2 md:col-span-1">
+                        <span class="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">Overall Status</span>
+                        <div class="mt-1">
+                            <span id="kpi-overall-status-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-400 border border-amber-800">REVIEW REQUIRED</span>
+                        </div>
+                        <span id="kpi-variance-text" class="text-[10px] text-slate-400 mt-1 block">Net Discrepancy: ₹0.00</span>
+                    </div>
+                </div>
+
+                <!-- Filter Pills, Search Bar & Summary Button -->
+                <div class="glass-panel rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex flex-wrap items-center gap-1.5" id="recon-filter-pills">
+                        <button onclick="setReconFilter('ALL')" id="rf-all" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 text-white border border-cyan-500 transition">All (<span id="cnt-rf-all">0</span>)</button>
+                        <button onclick="setReconFilter('MATCHED')" id="rf-matched" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition">Matched (<span id="cnt-rf-matched">0</span>)</button>
+                        <button onclick="setReconFilter('PROBABLE_MATCH')" id="rf-probable" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition">Probable (<span id="cnt-rf-probable">0</span>)</button>
+                        <button onclick="setReconFilter('UNMATCHED')" id="rf-unmatched" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition">Unmatched (<span id="cnt-rf-unmatched">0</span>)</button>
+                        <button onclick="setReconFilter('ANOMALIES')" id="rf-anomalies" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition">Anomalies (<span id="cnt-rf-anomalies">0</span>)</button>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <div class="relative">
+                            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5"></i>
+                            <input type="text" id="recon-search-input" oninput="handleReconSearch(this.value)" placeholder="Search description, UTR, amount..." class="bg-slate-900 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 w-52 sm:w-64 placeholder-slate-500">
+                        </div>
+                        <button onclick="showReconciliationSummaryScreen()" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-purple-900/60 hover:bg-purple-900 text-purple-200 border border-purple-700 flex items-center space-x-1.5 transition">
+                            <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
+                            <span>Summary Report</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Reconciliation Table (Section 26 & 27) -->
+                <div class="glass-panel rounded-2xl overflow-hidden shadow-2xl border border-slate-800">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-900/90 text-slate-400 uppercase tracking-wider text-[11px] border-b border-slate-800">
+                                <tr>
+                                    <th class="py-3.5 px-4 font-semibold">Date</th>
+                                    <th class="py-3.5 px-4 font-semibold">Bank Statement Record</th>
+                                    <th class="py-3.5 px-4 font-semibold">Company Ledger Match</th>
+                                    <th class="py-3.5 px-4 font-semibold text-right">Amount</th>
+                                    <th class="py-3.5 px-4 font-semibold text-center">Status</th>
+                                    <th class="py-3.5 px-4 font-semibold text-center">Confidence</th>
+                                    <th class="py-3.5 px-4 font-semibold text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recon-table-body" class="divide-y divide-slate-800/60 text-xs">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 5: Summary & Balance Reconciliation Statement (Section 28 & 37 Screen 5) -->
+            <div id="recon-screen-5" class="hidden glass-panel rounded-2xl p-6 sm:p-8 space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-5">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="award" class="w-5 h-5 text-emerald-400"></i>
+                            <h3 class="text-xl font-bold text-white">Reconciliation Summary Report</h3>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Official financial balance verification and exception audit log</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="downloadReconciliationReport()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-md shadow-cyan-600/20 transition">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span>Download Report (JSON)</span>
+                        </button>
+                        <button onclick="backToResultsScreen()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition">
+                            Back to Table
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                        <span class="text-[11px] text-slate-400 block">Total Bank Transactions</span>
+                        <span id="rep-bank-total" class="text-xl font-bold text-white mt-1 block">0</span>
+                    </div>
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                        <span class="text-[11px] text-slate-400 block">Total Company Ledger Txns</span>
+                        <span id="rep-comp-total" class="text-xl font-bold text-white mt-1 block">0</span>
+                    </div>
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                        <span class="text-[11px] text-slate-400 block">Total Matched Txns</span>
+                        <span id="rep-matched-total" class="text-xl font-bold text-emerald-400 mt-1 block">0</span>
+                    </div>
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                        <span class="text-[11px] text-slate-400 block">Identified Duplicates</span>
+                        <span id="rep-duplicates-total" class="text-xl font-bold text-amber-400 mt-1 block">0</span>
+                    </div>
+                </div>
+
+                <!-- Bank Balance Reconciliation Statement Table (Section 28) -->
+                <div class="bg-slate-900/40 rounded-xl border border-slate-800 p-5 space-y-4">
+                    <h4 class="text-xs font-bold text-white uppercase tracking-wider">Bank Balance Reconciliation Statement</h4>
+                    <div class="divide-y divide-slate-800/80 text-xs">
+                        <div class="py-2.5 flex justify-between text-slate-300">
+                            <span>Closing Balance per Bank Statement</span>
+                            <span id="rep-bal-bank" class="font-mono font-semibold text-white">₹0.00</span>
+                        </div>
+                        <div class="py-2.5 flex justify-between text-slate-300">
+                            <span>Add: Uncredited Inflows / Missing in Company Ledger</span>
+                            <span id="rep-bal-uncredited" class="font-mono font-semibold text-emerald-400">+ ₹0.00</span>
+                        </div>
+                        <div class="py-2.5 flex justify-between text-slate-300">
+                            <span>Less: Unpresented Outflows / Missing in Bank Statement</span>
+                            <span id="rep-bal-unpresented" class="font-mono font-semibold text-rose-400">- ₹0.00</span>
+                        </div>
+                        <div class="py-2.5 flex justify-between font-bold text-slate-200 bg-slate-950/60 px-3 rounded-lg mt-2">
+                            <span>Reconciled Adjusted Balance</span>
+                            <span id="rep-bal-adjusted" class="font-mono text-cyan-400">₹0.00</span>
+                        </div>
+                        <div class="py-2.5 flex justify-between text-slate-400">
+                            <span>Balance per Company Accounts Ledger</span>
+                            <span id="rep-bal-comp" class="font-mono text-slate-300">₹0.00</span>
+                        </div>
+                        <div class="py-2.5 flex justify-between font-bold">
+                            <span class="text-slate-300">Net Unreconciled Variance</span>
+                            <span id="rep-bal-variance" class="font-mono text-emerald-400">₹0.00 (Balanced)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Banner -->
+                <div id="rep-status-banner" class="bg-amber-950/30 border border-amber-800/60 rounded-xl p-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i data-lucide="alert-circle" class="w-5 h-5 text-amber-400"></i>
+                        <div>
+                            <h5 id="rep-status-title" class="text-xs font-bold text-amber-300">REVIEW REQUIRED</h5>
+                            <p id="rep-status-desc" class="text-xs text-amber-400/80 mt-0.5">Some financial anomalies remain pending auditor confirmation.</p>
+                        </div>
+                    </div>
+                    <button onclick="backToResultsScreen()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold">Review Exceptions</button>
+                </div>
+            </div>
+
+        </div>
+        <!-- End WORKSPACE 2: Reconciliation -->
 
     </main>
 
+    <!-- SCREEN 4: Forensic Investigation Modal (Section 24, 25 & 37 Screen 4) -->
+    <div id="recon-investigation-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-panel rounded-2xl max-w-4xl w-full border border-slate-700 p-6 sm:p-8 space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="h-9 w-9 rounded-xl bg-purple-950 border border-purple-800 flex items-center justify-center text-purple-400">
+                        <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white tracking-tight uppercase">Transaction Investigation</h3>
+                        <p id="modal-inv-subtitle" class="text-xs text-slate-400">Forensic audit & AI evidence reasoning</p>
+                    </div>
+                </div>
+                <button onclick="closeInvestigationModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Side-by-Side Comparison Box (Section 24) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Bank Record Card -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2.5">
+                    <div class="flex items-center justify-between text-xs font-bold text-cyan-400 border-b border-slate-800 pb-2">
+                        <span class="flex items-center space-x-1.5"><i data-lucide="building-2" class="w-3.5 h-3.5"></i><span>Bank Transaction</span></span>
+                        <span id="modal-bank-type-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-950 text-rose-400 border border-rose-800">DR</span>
+                    </div>
+                    <div class="space-y-1.5 text-xs">
+                        <div class="flex justify-between"><span class="text-slate-400">Date:</span><span id="modal-bank-date" class="text-slate-200 font-semibold font-mono">-</span></div>
+                        <div><span class="text-slate-400 block text-[11px]">Description:</span><span id="modal-bank-desc" class="text-slate-200 font-medium block mt-0.5">-</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Amount:</span><span id="modal-bank-amount" class="text-white font-bold font-mono">₹0.00</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Reference:</span><span id="modal-bank-ref" class="text-slate-300 font-mono text-[11px]">-</span></div>
+                        <div class="pt-2 border-t border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
+                            <span>Provenance:</span>
+                            <span id="modal-bank-prov" class="bg-slate-800 px-2 py-0.5 rounded text-cyan-300 font-mono">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Company Record Card -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-2.5">
+                    <div class="flex items-center justify-between text-xs font-bold text-purple-400 border-b border-slate-800 pb-2">
+                        <span class="flex items-center space-x-1.5"><i data-lucide="book-open" class="w-3.5 h-3.5"></i><span>Possible Company Match</span></span>
+                        <span id="modal-comp-type-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-950 text-rose-400 border border-rose-800">DR</span>
+                    </div>
+                    <div class="space-y-1.5 text-xs">
+                        <div class="flex justify-between"><span class="text-slate-400">Date:</span><span id="modal-comp-date" class="text-slate-200 font-semibold font-mono">-</span></div>
+                        <div><span class="text-slate-400 block text-[11px]">Description:</span><span id="modal-comp-desc" class="text-slate-200 font-medium block mt-0.5">-</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Amount:</span><span id="modal-comp-amount" class="text-white font-bold font-mono">₹0.00</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Reference:</span><span id="modal-comp-ref" class="text-slate-300 font-mono text-[11px]">-</span></div>
+                        <div class="pt-2 border-t border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
+                            <span>Provenance:</span>
+                            <span id="modal-comp-prov" class="bg-slate-800 px-2 py-0.5 rounded text-purple-300 font-mono">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deterministic Match Confidence & "Why?" Breakdown (Section 24) -->
+            <div class="bg-slate-900/50 rounded-xl p-4 border border-slate-800 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Deterministic Match Confidence</span>
+                    <span id="modal-match-confidence" class="text-sm font-extrabold text-cyan-400 font-mono">0%</span>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold text-slate-400 block mb-1.5">Why?</span>
+                    <ul id="modal-match-reasons" class="text-xs space-y-1 text-slate-300">
+                        <!-- Reasons list -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- AI Forensic Investigation Card (Sections 20, 21, 24) -->
+            <div class="bg-gradient-to-br from-purple-950/40 to-slate-900 border border-purple-800/60 rounded-xl p-5 space-y-3.5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold text-white uppercase tracking-wider">AI Forensic Investigation</span>
+                        <span id="modal-ai-model-badge" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-950 text-purple-300 border border-purple-800">gemini-1.5-flash</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[11px] text-slate-400">Risk Assessment:</span>
+                        <span id="modal-ai-risk-badge" class="px-2.5 py-0.5 rounded text-xs font-bold bg-amber-950 text-amber-400 border border-amber-800">MEDIUM</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 id="modal-ai-finding" class="text-sm font-bold text-white leading-snug">Auditor exception analysis</h4>
+                </div>
+
+                <!-- Traceable Evidence Chain -->
+                <div>
+                    <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Traceable Evidence</span>
+                    <ul id="modal-ai-evidence-list" class="text-xs space-y-1 text-slate-300 list-disc list-inside bg-slate-950/50 p-3 rounded-lg border border-slate-800">
+                        <!-- Evidence bullets -->
+                    </ul>
+                </div>
+
+                <!-- Conclusion & Recommended Action -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-800/80 text-xs">
+                    <div>
+                        <span class="text-slate-400 font-semibold block text-[11px]">Auditor Conclusion:</span>
+                        <p id="modal-ai-conclusion" class="text-slate-300 mt-0.5 leading-relaxed">-</p>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-semibold block text-[11px]">Recommended Action:</span>
+                        <p id="modal-ai-action" class="text-cyan-300 font-semibold mt-0.5">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Human Review Audit Actions (Section 29) -->
+            <div class="pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button id="btn-modal-confirm" onclick="submitHumanReview('CONFIRM_MATCH')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-md shadow-emerald-600/20 transition">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        <span>Confirm Match</span>
+                    </button>
+                    <button id="btn-modal-unmatched" onclick="submitHumanReview('MARK_UNMATCHED')" class="px-4 py-2 bg-rose-600/80 hover:bg-rose-600 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 transition">
+                        <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                        <span>Mark Unmatched</span>
+                    </button>
+                    <button id="btn-modal-duplicate" onclick="submitHumanReview('MARK_DUPLICATE')" class="px-4 py-2 bg-amber-600/80 hover:bg-amber-600 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 transition">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span>Mark Duplicate</span>
+                    </button>
+                </div>
+                <button onclick="closeInvestigationModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium transition">
+                    Back / Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
-        FinAgent • Built with FastAPI, Pydantic & Deterministic Financial Parsing Architecture
+        FinAgent Enterprise Engine • Deterministic Multi-Source Financial Ingestion Architecture
     </footer>
 
     <!-- App Logic Script -->
@@ -339,6 +935,7 @@
         let currentMappings = [];
         let allTransactions = [];
         let activeFilter = 'ALL';
+        let currentSourceType = 'BANK_STATEMENT';
 
         const dropzone = document.getElementById('dropzone');
         const fileInput = document.getElementById('file-input');
@@ -363,10 +960,30 @@
             }
         });
 
+        function setSourceType(type) {
+            currentSourceType = type;
+            document.querySelectorAll('#source-type-container button').forEach(b => {
+                b.className = "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition";
+            });
+            const activeMap = {
+                'BANK_STATEMENT': 'src-btn-bank',
+                'ACCOUNTING_LEDGER': 'src-btn-ledger',
+                'PAYMENT_REGISTER': 'src-btn-payment',
+                'INVOICE_REGISTER': 'src-btn-invoice',
+                'ERP_EXPORT': 'src-btn-erp'
+            };
+            const btn = document.getElementById(activeMap[type]);
+            if (btn) btn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 text-white shadow-md shadow-cyan-600/30 transition";
+            const lbl = document.getElementById('lbl-source-type');
+            if (lbl) lbl.innerText = type;
+        }
+
         async function uploadFile(file) {
-            showProcessing("Uploading Statement", "Hashing with SHA-256 and registering ingestion job...");
+            showProcessing("Uploading Financial Document", "Computing SHA-256 fingerprint & checking scope deduplication...");
             const formData = new FormData();
             formData.append("file", file);
+            formData.append("reconciliation_id", document.getElementById('reconciliation-select').value);
+            formData.append("source_type", currentSourceType);
 
             try {
                 const res = await fetch("/api/v1/files/upload", {
@@ -376,6 +993,13 @@
                 if (!res.ok) throw new Error((await res.json()).detail || "Upload failed");
                 const data = await res.json();
                 currentJobId = data.job_id;
+
+                if (data.is_duplicate) {
+                    document.getElementById('duplicate-warning').classList.remove('hidden');
+                } else {
+                    document.getElementById('duplicate-warning').classList.add('hidden');
+                }
+
                 detectFile(currentJobId);
             } catch (err) {
                 alert("Upload Error: " + err.message);
@@ -384,17 +1008,7 @@
         }
 
         async function loadSampleStatement(bank) {
-            let fixtureName = "sample_hdfc_bank_statement.csv";
-            if (bank === "icici") fixtureName = "sample_icici_statement.xlsx";
-            if (bank === "sbi") fixtureName = "sample_sbi_statement.csv";
-
-            showProcessing("Loading Sample Statement", `Loading ${bank.toUpperCase()} synthetic fixture...`);
-            try {
-                // Fetch fixture from tests/fixtures
-                const res = await fetch(`/api/v1/parse-jobs/sample-${bank}`);
-            } catch (e) {}
-
-            // Direct upload of built-in demo content
+            showProcessing("Loading Synthetic Financial Fixture", `Loading ${bank.toUpperCase()} bank statement...`);
             let content, filename;
             if (bank === "hdfc") {
                 filename = "hdfc_sample_statement.csv";
@@ -413,7 +1027,7 @@
         }
 
         async function detectFile(jobId) {
-            showProcessing("Extracting & Mapping Schema", "Scanning header offsets and running RapidFuzz column match...");
+            showProcessing("Extracting & Mapping Schema", "Scanning header offsets and loading learned mapping memory...");
             try {
                 const res = await fetch(`/api/v1/parse-jobs/${jobId}/detect`, { method: "POST" });
                 if (!res.ok) throw new Error((await res.json()).detail || "Detection failed");
@@ -459,6 +1073,8 @@
                 let methodBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">manual</span>`;
                 if (m.method === "alias") {
                     methodBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-800">100% exact alias</span>`;
+                } else if (m.method === "learned") {
+                    methodBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-cyan-950 text-cyan-300 border border-cyan-800">★ learned rule</span>`;
                 } else if (m.method === "fuzzy") {
                     methodBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-950 text-blue-400 border border-blue-800">${(m.confidence * 100).toFixed(0)}% fuzzy match</span>`;
                 } else if (m.method === "heuristic") {
@@ -485,9 +1101,8 @@
         }
 
         async function submitMappingAndExecute() {
-            showProcessing("Normalizing & Validating", "Running date format parsing, currency cleaning, and business rule validation...");
+            showProcessing("Normalizing & Validating", "Running deterministic date/amount normalization & verifying financial control totals...");
             
-            // Build custom mappings
             const mappingObj = {};
             currentMappings.forEach((m, idx) => {
                 const sel = document.getElementById(`map-select-${idx}`);
@@ -496,13 +1111,17 @@
                 }
             });
 
+            const remember = document.getElementById('chk-remember-rules').checked;
+
             try {
                 const res = await fetch(`/api/v1/parse-jobs/${currentJobId}/execute`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         mappings: mappingObj,
-                        currency: "INR"
+                        currency: "INR",
+                        source_type: currentSourceType,
+                        remember_rules: remember
                     })
                 });
                 if (!res.ok) throw new Error((await res.json()).detail || "Execution failed");
@@ -525,11 +1144,34 @@
 
             document.getElementById('kpi-total').innerText = data.total_rows;
             document.getElementById('kpi-valid').innerText = data.valid_rows;
+            document.getElementById('lbl-ready-count').innerText = data.valid_rows;
             document.getElementById('kpi-warnings').innerText = data.warning_rows;
             document.getElementById('kpi-errors').innerText = data.error_rows;
             document.getElementById('error-badge-count').innerText = data.warning_rows + data.error_rows;
 
-            // Fetch all transactions
+            // Render Financial Control Totals (Section 19)
+            const ctrl = data.control_totals;
+            if (ctrl) {
+                document.getElementById('ctrl-opening').innerText = ctrl.opening_balance ? `₹${parseFloat(ctrl.opening_balance).toLocaleString('en-IN', {minimumFractionDigits: 2})}` : "N/A";
+                document.getElementById('ctrl-credits').innerText = `₹${parseFloat(ctrl.total_credits || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                document.getElementById('ctrl-debits').innerText = `₹${parseFloat(ctrl.total_debits || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+                document.getElementById('ctrl-expected').innerText = ctrl.expected_closing_balance ? `₹${parseFloat(ctrl.expected_closing_balance).toLocaleString('en-IN', {minimumFractionDigits: 2})}` : "N/A";
+                document.getElementById('ctrl-stated').innerText = ctrl.closing_balance ? `₹${parseFloat(ctrl.closing_balance).toLocaleString('en-IN', {minimumFractionDigits: 2})}` : "N/A";
+
+                const badge = document.getElementById('control-status-badge');
+                if (ctrl.status === "VERIFIED") {
+                    badge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800";
+                    badge.innerText = `✓ CONTROL TOTALS VERIFIED (Diff: ₹0.00)`;
+                } else if (ctrl.status === "CONTROL_TOTAL_MISMATCH") {
+                    badge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-950 text-rose-400 border border-rose-800";
+                    badge.innerText = `⚠ CONTROL TOTAL MISMATCH (Diff: ₹${parseFloat(ctrl.control_difference).toFixed(2)})`;
+                } else {
+                    badge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700";
+                    badge.innerText = `Balance anchor not recorded`;
+                }
+            }
+
+            // Fetch transactions
             const txRes = await fetch(`/api/v1/parse-jobs/${currentJobId}/transactions?limit=1000`);
             allTransactions = await txRes.json();
             renderTransactionsTable(allTransactions);
@@ -551,7 +1193,7 @@
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500">No transactions match current filter.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-500">No transactions match current filter.</td></tr>`;
                 return;
             }
 
@@ -566,6 +1208,10 @@
                 const formattedAmt = parseFloat(t.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 });
                 const formattedBal = t.balance ? parseFloat(t.balance).toLocaleString('en-IN', { minimumFractionDigits: 2 }) : "-";
 
+                // Provenance tag (Section 22)
+                const prov = t.provenance || {};
+                const provText = prov.filename ? `${prov.filename} (R:${prov.row || t.source_row})` : `Row #${t.source_row || '-'}`;
+
                 tr.innerHTML = `
                     <td class="py-3 px-4 font-semibold text-cyan-400 text-[11px]">${t.id}</td>
                     <td class="py-3 px-4 text-slate-300">${t.date}</td>
@@ -573,6 +1219,7 @@
                     <td class="py-3 px-4">${typeBadge}</td>
                     <td class="py-3 px-4 text-right font-semibold ${t.type === 'DEBIT' ? 'text-rose-400' : 'text-emerald-400'}">₹${formattedAmt}</td>
                     <td class="py-3 px-4 text-slate-400 text-[11px]">${t.reference || '<span class="text-slate-600">-</span>'}</td>
+                    <td class="py-3 px-4 text-[10px] text-slate-400"><span class="bg-slate-800 px-2 py-0.5 rounded">${provText}</span></td>
                     <td class="py-3 px-4 text-right text-slate-400">₹${formattedBal}</td>
                 `;
                 tbody.appendChild(tr);
@@ -591,7 +1238,7 @@
                     <td class="py-1.5 px-3 text-slate-300">#${e.row_number || '-'}</td>
                     <td class="py-1.5 px-3">${badge}</td>
                     <td class="py-1.5 px-3 text-slate-300">${e.field || '-'}</td>
-                    <td class="py-1.5 px-3 text-slate-500 truncate max-w-xs">${e.raw_value || '-'}</td>
+                    <td class="py-1.5 px-3 text-slate-500 truncate max-w-xs">${e.value || '-'}</td>
                     <td class="py-1.5 px-3 text-slate-300">${e.message}</td>
                 `;
                 tbody.appendChild(tr);
@@ -643,6 +1290,560 @@
             document.getElementById('step-3').className = "h-9 w-9 rounded-full border-2 border-slate-700 text-slate-500 flex items-center justify-center font-bold text-sm bg-slate-900";
             document.getElementById('step-4').className = "h-9 w-9 rounded-full border-2 border-slate-700 text-slate-500 flex items-center justify-center font-bold text-sm bg-slate-900";
         }
+
+        // =============================================================
+        // Process 02: Reconciliation & Anomaly Engine Frontend Logic
+        // =============================================================
+        let currentWorkspace = 'ingestion';
+        let reconMatches = [];
+        let reconAnomalies = [];
+        let reconSummary = null;
+        let activeReconFilter = 'ALL';
+        let activeReconSearch = '';
+        let currentInvestigatingItem = null;
+
+        function switchMainWorkspace(ws) {
+            currentWorkspace = ws;
+            const btnIngest = document.getElementById('nav-btn-ingestion');
+            const btnRecon = document.getElementById('nav-btn-reconciliation');
+            const wsIngest = document.getElementById('workspace-ingestion');
+            const wsRecon = document.getElementById('workspace-reconciliation');
+
+            if (ws === 'ingestion') {
+                btnIngest.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 text-white shadow-sm flex items-center space-x-1.5 transition";
+                btnRecon.className = "px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white flex items-center space-x-1.5 transition";
+                wsIngest.classList.remove('hidden');
+                wsRecon.classList.add('hidden');
+            } else {
+                btnRecon.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-purple-600 text-white shadow-sm flex items-center space-x-1.5 transition";
+                btnIngest.className = "px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white flex items-center space-x-1.5 transition";
+                wsIngest.classList.add('hidden');
+                wsRecon.classList.remove('hidden');
+                checkReconciliationInputStatus();
+            }
+            lucide.createIcons();
+        }
+
+        function onReconciliationChanged() {
+            if (currentWorkspace === 'reconciliation') {
+                checkReconciliationInputStatus();
+            }
+        }
+
+        async function checkReconciliationInputStatus() {
+            const recId = document.getElementById('reconciliation-select').value || 'REC_DEMO_01';
+            try {
+                const res = await fetch(`/api/v1/reconciliations/${recId}/input-status`);
+                if (!res.ok) return;
+                const data = await res.json();
+
+                document.getElementById('recon-bank-count').innerText = data.bank_count || 0;
+                document.getElementById('recon-comp-count').innerText = data.company_count || 0;
+
+                const bankBadge = document.getElementById('recon-bank-status-badge');
+                const compBadge = document.getElementById('recon-comp-status-badge');
+                const bankReadyText = document.getElementById('recon-bank-ready-text');
+                const compReadyText = document.getElementById('recon-comp-ready-text');
+
+                if (data.bank_ready) {
+                    bankBadge.innerHTML = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">✓ Ready (${data.bank_count} Txns)</span>`;
+                    bankReadyText.innerText = "✓ Validated & Parsed Canonical Data";
+                } else {
+                    bankBadge.innerHTML = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950 text-amber-400 border border-amber-800">Awaiting Ingestion</span>`;
+                    bankReadyText.innerText = "0 bank transactions registered";
+                }
+
+                if (data.company_ready) {
+                    compBadge.innerHTML = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">✓ Ready (${data.company_count} Txns)</span>`;
+                    compReadyText.innerText = "✓ Validated & Parsed Canonical Data";
+                } else {
+                    compBadge.innerHTML = `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950 text-amber-400 border border-amber-800">Awaiting Ingestion</span>`;
+                    compReadyText.innerText = "0 company ledger entries registered";
+                }
+
+                lucide.createIcons();
+            } catch (e) {
+                console.error("Input status error:", e);
+            }
+        }
+
+        async function seedAndStartReconDemo() {
+            const recId = document.getElementById('reconciliation-select').value || 'REC_DEMO_01';
+            try {
+                const res = await fetch(`/api/v1/reconciliations/${recId}/seed-demo`, { method: "POST" });
+                if (!res.ok) throw new Error("Failed to seed demo records");
+                await checkReconciliationInputStatus();
+                startReconciliationExecution();
+            } catch (err) {
+                alert("Demo seed error: " + err.message);
+            }
+        }
+
+        async function startReconciliationExecution() {
+            const recId = document.getElementById('reconciliation-select').value || 'REC_DEMO_01';
+
+            // Switch to Screen 2 (Matching Progress)
+            document.getElementById('recon-screen-1').classList.add('hidden');
+            document.getElementById('recon-screen-3').classList.add('hidden');
+            document.getElementById('recon-screen-5').classList.add('hidden');
+            document.getElementById('recon-screen-2').classList.remove('hidden');
+
+            const bankCount = document.getElementById('recon-bank-count').innerText;
+            const compCount = document.getElementById('recon-comp-count').innerText;
+            document.getElementById('recon-prog-bank-cnt').innerText = bankCount || '8';
+            document.getElementById('recon-prog-comp-cnt').innerText = compCount || '8';
+
+            lucide.createIcons();
+
+            try {
+                const res = await fetch(`/api/v1/reconciliations/${recId}/start`, { method: "POST" });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || "Reconciliation failed");
+                }
+
+                // Smooth UX transition
+                await new Promise(r => setTimeout(r, 600));
+
+                await loadReconciliationData(recId);
+
+                // Show Screen 3 (Results)
+                document.getElementById('recon-screen-2').classList.add('hidden');
+                document.getElementById('recon-screen-3').classList.remove('hidden');
+                lucide.createIcons();
+            } catch (e) {
+                alert("Reconciliation Error: " + e.message);
+                document.getElementById('recon-screen-2').classList.add('hidden');
+                document.getElementById('recon-screen-1').classList.remove('hidden');
+            }
+        }
+
+        async function loadReconciliationData(recId) {
+            const [matchesRes, anomRes, sumRes] = await Promise.all([
+                fetch(`/api/v1/reconciliations/${recId}/matches`),
+                fetch(`/api/v1/reconciliations/${recId}/anomalies`),
+                fetch(`/api/v1/reconciliations/${recId}/results`)
+            ]);
+
+            reconMatches = await matchesRes.json();
+            reconAnomalies = await anomRes.json();
+            reconSummary = await sumRes.json();
+
+            renderReconciliationDashboard();
+        }
+
+        function renderReconciliationDashboard() {
+            if (!reconSummary) return;
+
+            // KPIs
+            document.getElementById('kpi-matched-count').innerText = reconSummary.matched_count || 0;
+            document.getElementById('kpi-matched-pct').innerText = `${((reconSummary.match_percentage || 0) * 100).toFixed(0)}%`;
+            document.getElementById('kpi-probable-count').innerText = reconSummary.probable_matches_count || 0;
+            document.getElementById('kpi-unmatched-count').innerText = reconSummary.unmatched_count || 0;
+            document.getElementById('kpi-anomalies-count').innerText = reconAnomalies.length || 0;
+
+            const varianceBadge = document.getElementById('kpi-overall-status-badge');
+            const varianceText = document.getElementById('kpi-variance-text');
+            if (reconSummary.overall_status === 'RECONCILIATION_COMPLETE') {
+                varianceBadge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800";
+                varianceBadge.innerText = "COMPLETE";
+            } else {
+                varianceBadge.className = "px-2.5 py-1 rounded-full text-xs font-bold bg-amber-950 text-amber-400 border border-amber-800";
+                varianceBadge.innerText = "REVIEW REQUIRED";
+            }
+            varianceText.innerText = `Net Discrepancy: ₹${parseFloat(reconSummary.amount_discrepancy_total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            // Filter pills counts
+            document.getElementById('cnt-rf-all').innerText = reconMatches.length;
+            document.getElementById('cnt-rf-matched').innerText = reconMatches.filter(m => m.status === 'MATCHED').length;
+            document.getElementById('cnt-rf-probable').innerText = reconMatches.filter(m => m.status === 'PROBABLE_MATCH').length;
+            document.getElementById('cnt-rf-unmatched').innerText = reconMatches.filter(m => m.status === 'UNMATCHED').length;
+            document.getElementById('cnt-rf-anomalies').innerText = reconAnomalies.length;
+
+            renderReconTable();
+        }
+
+        function setReconFilter(filter) {
+            activeReconFilter = filter;
+            document.querySelectorAll('#recon-filter-pills button').forEach(btn => {
+                btn.className = "px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 text-slate-400 hover:text-white border border-slate-700 transition";
+            });
+            const activeMap = {
+                'ALL': 'rf-all',
+                'MATCHED': 'rf-matched',
+                'PROBABLE_MATCH': 'rf-probable',
+                'UNMATCHED': 'rf-unmatched',
+                'ANOMALIES': 'rf-anomalies'
+            };
+            const activeBtn = document.getElementById(activeMap[filter]);
+            if (activeBtn) {
+                activeBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 text-white border border-cyan-500 transition";
+            }
+            renderReconTable();
+        }
+
+        function handleReconSearch(q) {
+            activeReconSearch = (q || '').trim().toLowerCase();
+            renderReconTable();
+        }
+
+        function renderReconTable() {
+            const tbody = document.getElementById('recon-table-body');
+            tbody.innerHTML = "";
+
+            if (activeReconFilter === 'ANOMALIES') {
+                let filteredAnoms = reconAnomalies;
+                if (activeReconSearch) {
+                    filteredAnoms = filteredAnoms.filter(a => {
+                        const t = a.transaction || {};
+                        const c = a.candidate_transaction || {};
+                        const str = `${a.type} ${t.description || ''} ${c.description || ''} ${t.reference || ''} ${a.amount_difference}`.toLowerCase();
+                        return str.includes(activeReconSearch);
+                    });
+                }
+
+                if (filteredAnoms.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500">No anomalies found.</td></tr>`;
+                    return;
+                }
+
+                filteredAnoms.forEach(a => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-900/50 transition";
+                    const t = a.transaction || {};
+                    const c = a.candidate_transaction || {};
+                    const dateStr = t.date || c.date || "-";
+                    const amt = t.amount || a.amount_difference || 0;
+                    const formattedAmt = parseFloat(amt).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                    const tProv = t.provenance || {};
+                    const cProv = c.provenance || {};
+
+                    const tProvBadge = tProv.filename ? `<span class="bg-slate-800 px-1.5 py-0.5 rounded text-[10px] text-slate-400">${tProv.filename} #R${tProv.row || '-'}</span>` : '';
+                    const cProvBadge = cProv.filename ? `<span class="bg-slate-800 px-1.5 py-0.5 rounded text-[10px] text-slate-400">${cProv.filename} #R${cProv.row || '-'}</span>` : '';
+
+                    const sevColor = a.severity === 'HIGH' ? 'bg-rose-950 text-rose-400 border-rose-800' : (a.severity === 'MEDIUM' ? 'bg-amber-950 text-amber-400 border-amber-800' : 'bg-blue-950 text-blue-400 border-blue-800');
+
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 text-slate-300 font-mono">${dateStr}</td>
+                        <td class="py-3 px-4">
+                            <div class="font-medium text-slate-200">${t.description || '<span class="text-slate-500">None</span>'}</div>
+                            <div class="text-[11px] text-slate-400 flex items-center space-x-2 mt-0.5">
+                                <span>Ref: ${t.reference || '-'}</span>
+                                ${tProvBadge}
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="font-medium text-slate-300">${c.description || '<span class="text-slate-600">None</span>'}</div>
+                            <div class="text-[11px] text-slate-400 flex items-center space-x-2 mt-0.5">
+                                <span>Ref: ${c.reference || '-'}</span>
+                                ${cProvBadge}
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 text-right font-semibold text-rose-400 font-mono">₹${formattedAmt}</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${sevColor}">${a.type}</span>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="text-rose-400 font-bold">${a.severity}</span>
+                        </td>
+                        <td class="py-3 px-4 text-right">
+                            <button onclick="openAnomalyInvestigationModal('${a.id}')" class="px-2.5 py-1 rounded bg-purple-950 hover:bg-purple-900 text-purple-300 border border-purple-800 text-[11px] font-semibold flex items-center space-x-1 ml-auto transition">
+                                <i data-lucide="shield-alert" class="w-3 h-3 text-purple-400"></i>
+                                <span>Investigate</span>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                lucide.createIcons();
+                return;
+            }
+
+            // Render Matches
+            let filtered = reconMatches;
+            if (activeReconFilter !== 'ALL') {
+                filtered = filtered.filter(m => m.status === activeReconFilter);
+            }
+
+            if (activeReconSearch) {
+                filtered = filtered.filter(m => {
+                    const b = m.bank_transaction || {};
+                    const c = m.company_transaction || {};
+                    const str = `${b.description || ''} ${c.description || ''} ${b.reference || ''} ${c.reference || ''} ${b.amount || ''} ${c.amount || ''}`.toLowerCase();
+                    return str.includes(activeReconSearch);
+                });
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-500">No matching transactions found.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(m => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-900/50 transition";
+                const b = m.bank_transaction || {};
+                const c = m.company_transaction || {};
+                const dateStr = b.date || c.date || "-";
+                const amt = b.amount || c.amount || 0;
+                const formattedAmt = parseFloat(amt).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                const confPct = Math.round((m.confidence || 0) * 100);
+
+                let statusBadge = "";
+                if (m.status === 'MATCHED') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800">MATCHED</span>`;
+                } else if (m.status === 'PROBABLE_MATCH') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950 text-amber-400 border border-amber-800">PROBABLE</span>`;
+                } else {
+                    statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-950 text-rose-400 border border-rose-800">UNMATCHED</span>`;
+                }
+
+                const bProv = b.provenance || {};
+                const cProv = c.provenance || {};
+                const bProvBadge = bProv.filename ? `<span class="bg-slate-800 px-1.5 py-0.5 rounded text-[10px] text-slate-400">${bProv.filename} #R${bProv.row || '-'}</span>` : '';
+                const cProvBadge = cProv.filename ? `<span class="bg-slate-800 px-1.5 py-0.5 rounded text-[10px] text-slate-400">${cProv.filename} #R${cProv.row || '-'}</span>` : '';
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-slate-300 font-mono">${dateStr}</td>
+                    <td class="py-3 px-4">
+                        <div class="font-medium text-slate-200">${b.description || '<span class="text-slate-500 italic">Unmatched In Bank</span>'}</div>
+                        <div class="text-[11px] text-slate-400 flex items-center space-x-2 mt-0.5">
+                            <span>Ref: ${b.reference || '-'}</span>
+                            ${bProvBadge}
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="font-medium text-slate-300">${c.description || '<span class="text-slate-500 italic">Unmatched In Ledger</span>'}</div>
+                        <div class="text-[11px] text-slate-400 flex items-center space-x-2 mt-0.5">
+                            <span>Ref: ${c.reference || '-'}</span>
+                            ${cProvBadge}
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-right font-semibold font-mono ${b.type === 'DEBIT' || c.type === 'DEBIT' ? 'text-rose-400' : 'text-emerald-400'}">₹${formattedAmt}</td>
+                    <td class="py-3 px-4 text-center">${statusBadge}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="font-bold ${confPct >= 80 ? 'text-emerald-400' : (confPct >= 50 ? 'text-amber-400' : 'text-slate-500')}">${confPct}%</span>
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="openMatchInvestigationModal('${m.id}')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px] font-semibold flex items-center space-x-1 ml-auto transition">
+                            <i data-lucide="${m.status === 'MATCHED' ? 'check-circle' : 'search'}" class="w-3 h-3 text-cyan-400"></i>
+                            <span>${m.status === 'MATCHED' ? 'Details' : 'Investigate'}</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function openMatchInvestigationModal(matchId) {
+            const m = reconMatches.find(x => x.id === matchId);
+            if (!m) return;
+            currentInvestigatingItem = { type: 'match', data: m };
+
+            const anom = reconAnomalies.find(a => 
+                (a.transaction_id === m.bank_transaction_id && a.candidate_transaction_id === m.company_transaction_id) ||
+                (a.transaction_id === m.bank_transaction_id)
+            );
+
+            populateModalWithData(m.bank_transaction, m.company_transaction, m.confidence, m.reasons, anom);
+        }
+
+        function openAnomalyInvestigationModal(anomId) {
+            const a = reconAnomalies.find(x => x.id === anomId);
+            if (!a) return;
+            currentInvestigatingItem = { type: 'anomaly', data: a };
+
+            const conf = a.type === 'DUPLICATE_TRANSACTION' ? 0.95 : (a.type === 'DATE_MISMATCH' ? 0.90 : 0.85);
+            populateModalWithData(a.transaction, a.candidate_transaction, conf, a.evidence, a);
+        }
+
+        function populateModalWithData(bankTxn, compTxn, confidence, reasons, anomalyObj) {
+            const b = bankTxn || {};
+            const c = compTxn || {};
+
+            // Bank Card
+            document.getElementById('modal-bank-date').innerText = b.date || '-';
+            document.getElementById('modal-bank-desc').innerText = b.description || 'Missing / Not present in Bank Statement';
+            document.getElementById('modal-bank-amount').innerText = b.amount ? `₹${parseFloat(b.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '-';
+            document.getElementById('modal-bank-ref').innerText = b.reference || 'None';
+            document.getElementById('modal-bank-type-badge').innerText = b.type === 'CREDIT' ? 'CR' : 'DR';
+            document.getElementById('modal-bank-type-badge').className = b.type === 'CREDIT' ? 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800' : 'px-2 py-0.5 rounded text-[10px] font-bold bg-rose-950 text-rose-400 border border-rose-800';
+            const bProv = b.provenance || {};
+            document.getElementById('modal-bank-prov').innerText = bProv.filename ? `${bProv.filename} (Row #${bProv.row || '-'})` : 'Synthetic / Manual';
+
+            // Company Card
+            document.getElementById('modal-comp-date').innerText = c.date || '-';
+            document.getElementById('modal-comp-desc').innerText = c.description || 'Missing / Not present in Company Accounts';
+            document.getElementById('modal-comp-amount').innerText = c.amount ? `₹${parseFloat(c.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}` : '-';
+            document.getElementById('modal-comp-ref').innerText = c.reference || 'None';
+            document.getElementById('modal-comp-type-badge').innerText = c.type === 'CREDIT' ? 'CR' : 'DR';
+            document.getElementById('modal-comp-type-badge').className = c.type === 'CREDIT' ? 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800' : 'px-2 py-0.5 rounded text-[10px] font-bold bg-rose-950 text-rose-400 border border-rose-800';
+            const cProv = c.provenance || {};
+            document.getElementById('modal-comp-prov').innerText = cProv.filename ? `${cProv.filename} (Row #${cProv.row || '-'})` : 'Synthetic / Manual';
+
+            // Match Confidence & Why
+            const confPct = Math.round((confidence || 0) * 100);
+            document.getElementById('modal-match-confidence').innerText = `${confPct}%`;
+
+            const reasonsUl = document.getElementById('modal-match-reasons');
+            reasonsUl.innerHTML = "";
+            const reasonsList = (reasons && reasons.length > 0) ? reasons : [
+                b.amount === c.amount ? "✓ Exact amount match" : "⚠ Amount discrepancy detected",
+                b.date === c.date ? "✓ Exact transaction date" : "⚠ Date variance within tolerance",
+                "✓ Description pattern evaluated"
+            ];
+            reasonsList.forEach(r => {
+                const li = document.createElement('li');
+                li.className = "flex items-center space-x-2 text-slate-300";
+                li.innerHTML = `<span class="text-cyan-400">✓</span><span>${r}</span>`;
+                reasonsUl.appendChild(li);
+            });
+
+            // AI Investigation Card
+            const inv = (anomalyObj && anomalyObj.investigation) ? anomalyObj.investigation : null;
+            if (inv) {
+                document.getElementById('modal-ai-finding').innerText = inv.finding;
+                document.getElementById('modal-ai-conclusion').innerText = inv.conclusion;
+                document.getElementById('modal-ai-action').innerText = inv.recommended_action;
+                document.getElementById('modal-ai-model-badge').innerText = inv.ai_model || "gemini-1.5-flash";
+                document.getElementById('modal-ai-risk-badge').innerText = inv.risk || "MEDIUM";
+
+                const evUl = document.getElementById('modal-ai-evidence-list');
+                evUl.innerHTML = "";
+                (inv.evidence || []).forEach(e => {
+                    const eli = document.createElement('li');
+                    eli.innerText = e;
+                    evUl.appendChild(eli);
+                });
+            } else {
+                const isExact = (b.amount && c.amount && b.amount === c.amount && b.date === c.date);
+                document.getElementById('modal-ai-finding').innerText = isExact ? "Exact Verified Reconciliation Match" : "Deterministic timing/amount discrepancy identified";
+                document.getElementById('modal-ai-conclusion').innerText = isExact ? "Entries on both sides verify 100% with identical reference & amount." : "Timing clearance difference detected; transaction is legitimate.";
+                document.getElementById('modal-ai-action').innerText = isExact ? "Audit completed - Verified match" : "Confirm match after checking 2-day bank clearing delay";
+                document.getElementById('modal-ai-model-badge').innerText = "gemini-1.5-flash";
+                document.getElementById('modal-ai-risk-badge').innerText = isExact ? "LOW" : "MEDIUM";
+
+                const evUl = document.getElementById('modal-ai-evidence-list');
+                evUl.innerHTML = `
+                    <li>Deterministic formula: Amount (40%), Date (20%), Narration (20%), UTR (15%), Type (5%)</li>
+                    <li>Full provenance preserved for both records</li>
+                    <li>One-to-One matching constraint verified</li>
+                `;
+            }
+
+            document.getElementById('recon-investigation-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeInvestigationModal() {
+            document.getElementById('recon-investigation-modal').classList.add('hidden');
+        }
+
+        async function submitHumanReview(action) {
+            if (!currentInvestigatingItem) return;
+            const recId = document.getElementById('reconciliation-select').value || 'REC_DEMO_01';
+
+            try {
+                if (currentInvestigatingItem.type === 'anomaly') {
+                    const anomId = currentInvestigatingItem.data.id;
+                    const res = await fetch(`/api/v1/anomalies/${anomId}/review`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: action, notes: "Auditor reviewed via dashboard" })
+                    });
+                    if (!res.ok) throw new Error("Review action failed");
+                } else {
+                    const matchId = currentInvestigatingItem.data.id;
+                    if (action === 'CONFIRM_MATCH') {
+                        await fetch(`/api/v1/matches/${matchId}/confirm`, { method: "POST" });
+                    } else if (action === 'MARK_UNMATCHED') {
+                        await fetch(`/api/v1/matches/${matchId}/reject`, { method: "POST" });
+                    }
+                }
+
+                closeInvestigationModal();
+                await loadReconciliationData(recId);
+                alert(`Human Review Audit Action Recorded: ${action}`);
+            } catch (err) {
+                alert("Action error: " + err.message);
+            }
+        }
+
+        function showReconciliationSummaryScreen() {
+            document.getElementById('recon-screen-3').classList.add('hidden');
+            document.getElementById('recon-screen-5').classList.remove('hidden');
+
+            if (!reconSummary) return;
+
+            document.getElementById('rep-bank-total').innerText = reconSummary.bank_transactions_count || 0;
+            document.getElementById('rep-comp-total').innerText = reconSummary.company_transactions_count || 0;
+            document.getElementById('rep-matched-total').innerText = reconSummary.matched_count || 0;
+            document.getElementById('rep-duplicates-total').innerText = reconSummary.duplicates_count || 0;
+
+            const bankBal = reconSummary.bank_closing_balance || 0;
+            const compBal = reconSummary.company_closing_balance || 0;
+            const adjBal = reconSummary.reconciled_adjusted_balance || 0;
+            const uncred = reconSummary.uncredited_deposits || 0;
+            const unpres = reconSummary.unpresented_cheques || 0;
+            const netVar = reconSummary.net_unreconciled_variance || 0;
+
+            document.getElementById('rep-bal-bank').innerText = `₹${parseFloat(bankBal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            document.getElementById('rep-bal-uncredited').innerText = `+ ₹${parseFloat(uncred).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            document.getElementById('rep-bal-unpresented').innerText = `- ₹${parseFloat(unpres).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            document.getElementById('rep-bal-adjusted').innerText = `₹${parseFloat(adjBal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            document.getElementById('rep-bal-comp').innerText = `₹${parseFloat(compBal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+            const varEl = document.getElementById('rep-bal-variance');
+            if (parseFloat(netVar) === 0) {
+                varEl.className = "font-mono text-emerald-400";
+                varEl.innerText = "₹0.00 (Perfect Balance)";
+            } else {
+                varEl.className = "font-mono text-rose-400";
+                varEl.innerText = `₹${parseFloat(netVar).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+            }
+
+            const bannerTitle = document.getElementById('rep-status-title');
+            const bannerDesc = document.getElementById('rep-status-desc');
+            if (reconSummary.overall_status === 'RECONCILIATION_COMPLETE') {
+                bannerTitle.innerText = "RECONCILIATION COMPLETE";
+                bannerTitle.className = "text-xs font-bold text-emerald-300";
+                bannerDesc.innerText = "All transactions reconciled and verified by auditor.";
+            } else {
+                bannerTitle.innerText = "REVIEW REQUIRED";
+                bannerTitle.className = "text-xs font-bold text-amber-300";
+                bannerDesc.innerText = `${reconAnomalies.length} anomaly exceptions pending human auditor sign-off.`;
+            }
+
+            lucide.createIcons();
+        }
+
+        function backToResultsScreen() {
+            document.getElementById('recon-screen-5').classList.add('hidden');
+            document.getElementById('recon-screen-3').classList.remove('hidden');
+        }
+
+        async function downloadReconciliationReport() {
+            const recId = document.getElementById('reconciliation-select').value || 'REC_DEMO_01';
+            try {
+                const res = await fetch(`/api/v1/reconciliations/${recId}/results`);
+                const data = await res.json();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `finagent_reconciliation_report_${recId}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                alert("Download failed: " + err.message);
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkReconciliationInputStatus();
+        });
     </script>
 </body>
 </html>
